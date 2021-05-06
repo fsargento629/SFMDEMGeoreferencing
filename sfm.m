@@ -1,15 +1,15 @@
-% openExample('vision/StructureFromMotionFromMultipleViewsExample')
-
-
+%% clear
+clear;
+clc;
+close all;
 %% Use |imageDatastore| to get a list of all image file names in a
 % directory.
-imageDir = fullfile(toolboxdir('vision'), 'visiondata', ...
-      'structureFromMotion');
+imageDir = 'Dataset_A';
 imds = imageDatastore(imageDir);
 
 % Display the images.
 figure
-montage(imds.Files, 'Size', [3, 2]);
+montage(imds.Files, 'Size', [5, 2]);
 
 % Convert the images to grayscale.
 images = cell(1, numel(imds.Files));
@@ -17,24 +17,14 @@ for i = 1:numel(imds.Files)
     I = readimage(imds, i);
     images{i} = rgb2gray(I);
 end
-
+I=images{1};
 title('Input Image Sequence');
-
-
-data = load(fullfile(imageDir, 'cameraParams.mat'));
-cameraParams = data.cameraParams;
-
-
 %% Get intrinsic parameters of the camera
-intrinsics = cameraParams.Intrinsics;
-
-%% Undistort the first image.
-I = undistortImage(images{1}, intrinsics); 
-
-%% .
+load('intrinsics_uavision_crop');
+%%  Detect features. Increasing 'NumOctaves' helps detect large-scale
 % features in high-resolution images. Use an ROI to eliminate spurious
 % features around the edges of the image.
-border = 50;
+border = 50;%50
 roi = [border, border, size(I, 2)- 2*border, size(I, 1)- 2*border];
 prevPoints   = detectSURFFeatures(I, 'NumOctaves', 8, 'ROI', roi);
 
@@ -52,10 +42,9 @@ viewId = 1;
 vSet = addView(vSet, viewId, rigid3d, 'Points', prevPoints);
 
 
-
 for i = 2:numel(images)
-    % Undistort the current image.
-    I = undistortImage(images{i}, intrinsics);
+    % Undistort the current image. (deprec)
+    I = images{i};
     
     % Detect, extract and match features.
     currPoints   = detectSURFFeatures(I, 'NumOctaves', 8, 'ROI', roi);
@@ -140,7 +129,7 @@ title('Refined Camera Poses');
 
 
 %% Read and undistort the first image
-I = undistortImage(images{1}, intrinsics); 
+I = images{1};
 
 %% Detect corners in the first image.
 prevPoints = detectMinEigenFeatures(I, 'MinQuality', 0.001);
@@ -160,7 +149,7 @@ vSet = updateView(vSet, 1, 'Points', prevPoints);
 %% Track the points across all views.
 for i = 2:numel(images)
     % Read and undistort the current image.
-    I = undistortImage(images{i}, intrinsics); 
+    I = images{i}; 
     
     % Track the points.
     [currPoints, validIdx] = step(tracker, I);
@@ -198,7 +187,7 @@ plotCamera(camPoses, 'Size', 0.2);
 hold on
 
 % Exclude noisy 3-D world points.
-goodIdx = (reprojectionErrors < 5);
+%goodIdx = (reprojectionErrors < 5);
 
 %% Display the dense 3-D world points.
 pcshow(xyzPoints(goodIdx, :), 'VerticalAxis', 'y', 'VerticalAxisDir', 'down', ...
