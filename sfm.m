@@ -5,6 +5,7 @@ close all;
 %% Use |imageDatastore| to get a list of all image file names in a
 % directory.
 imageDir = 'Dataset_A';
+%imageDir = 'UAVision_Dataset';
 imds = imageDatastore(imageDir);
 
 % Display the images.
