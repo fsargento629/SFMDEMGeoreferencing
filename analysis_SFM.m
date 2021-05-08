@@ -1,6 +1,6 @@
 %% load results
 clear;
-load('results_06_05_21_23_49','xyzPoints','camPoses');
+load('SFM_results/results_06_05_21_23_49','xyzPoints','camPoses');
 %% plot keypoints
 X=xyzPoints(:,1);
 Y=xyzPoints(:,2);

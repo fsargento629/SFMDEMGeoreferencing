@@ -21,7 +21,7 @@ end
 I=images{1};
 title('Input Image Sequence');
 %% Get intrinsic parameters of the camera
-load('intrinsics_uavision_crop');
+load('intrinsics/intrinsics_uavision_crop');
 %%  Detect features. Increasing 'NumOctaves' helps detect large-scale
 % features in high-resolution images. Use an ROI to eliminate spurious
 % features around the edges of the image.
