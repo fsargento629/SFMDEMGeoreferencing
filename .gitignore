@@ -1,3 +1,5 @@
 *.tif
 DEMs/
-UAVision_Dataset
+REMs/
+UAVision_Dataset/
+Datasets/

@@ -1,7 +1,7 @@
 %% load small DEM
 clear;
 clc;
-load('uavision_DEM');
+load('DEMs/uavision_DEM');
 res=30;%m
 z_sigma=60; %m^2
 %% create a noisy point set
@@ -48,3 +48,4 @@ hold on;
 surf(small_A);
 RMSE=mean((abs(Z-small_A)).^2,'all');
 disp(RMSE);
+save('REMs/rem1.mat','Z');

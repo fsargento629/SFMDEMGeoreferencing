@@ -2,8 +2,7 @@
 clear;
 clc;
 close all;
-%% Use |imageDatastore| to get a list of all image file names in a
-% directory.
+%%  get a list of all image file names in the directory.
 imageDir = 'Dataset_A';
 %imageDir = 'UAVision_Dataset';
 imds = imageDatastore(imageDir);
@@ -26,7 +25,7 @@ load('intrinsics/intrinsics_uavision_crop');
 % features in high-resolution images. Use an ROI to eliminate spurious
 % features around the edges of the image.
 border = 50;%50
-roi = [border, border, size(I, 2)- 2*border, size(I, 1)- 2*border];
+roi = [border, border, size(I, 2)- 2*border, size(I, 1)- 2*border]; %[x y width height]
 prevPoints   = detectSURFFeatures(I, 'NumOctaves', 8, 'ROI', roi);
 
 %% Extract features. Using 'Upright' features improves matching, as long as
@@ -35,6 +34,7 @@ prevFeatures = extractFeatures(I, prevPoints, 'Upright', true);
 
 %% Create an empty imageviewset object to manage the data associated with each
 % view.
+% 
 vSet = imageviewset;
 
 %% Add the first view. Place the camera associated with the first view
