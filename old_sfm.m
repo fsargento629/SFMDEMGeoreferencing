@@ -23,18 +23,16 @@ title('Input Image Sequence');
 load('intrinsics/intrinsics_uavision_crop');
 
 %% get initial pose
-%pitch=deg2rad(-90)+deg2rad(-10); 
-%roll=0;
-%yaw=deg2rad(72);
-%Z=0;%m
+pitch=deg2rad(-90)+deg2rad(-10); 
+roll=0;
+yaw=deg2rad(72);
+Z=0;%m
 %%  Detect features. Increasing 'NumOctaves' helps detect large-scale
 % features in high-resolution images. Use an ROI to eliminate spurious
 % features around the edges of the image.
 border = 50;%50
 roi = [border, border, size(I, 2)- 2*border, size(I, 1)- 2*border]; %[x y width height]
-prevPoints=detectKAZEFeatures(I);
-% prevPoints=selectStrongest(prevPoints,100);
-%prevPoints   = detectSURFFeatures(I, 'NumOctaves', 8, 'ROI', roi);
+prevPoints   = detectSURFFeatures(I, 'NumOctaves', 8, 'ROI', roi);
 
 %% Extract features. Using 'Upright' features improves matching, as long as
 % the camera motion involves little or no in-plane rotation.
@@ -48,17 +46,15 @@ vSet = imageviewset;
 %% Add the first view. Place the camera associated with the first view
 % and the origin, oriented along the Z-axis.
 viewId = 1;
-%vSet = addView(vSet, viewId, rigid3d(eul2rotm([roll pitch yaw],'XYZ'),[0 0 Z]), 'Points', prevPoints);
-vSet = addView(vSet, viewId, rigid3d, 'Points', prevPoints);
+vSet = addView(vSet, viewId, rigid3d(eul2rotm([roll pitch yaw],'XYZ'),[0 0 Z]), 'Points', prevPoints);
+
 
 for i = 2:numel(images)
     % Undistort the current image. (deprec)
     I = images{i};
     
     % Detect, extract and match features.
-    %currPoints   = detectSURFFeatures(I, 'NumOctaves', 8, 'ROI', roi);
-    currPoints = detectKAZEFeatures(I);
-%     currPoints=selectStrongest(currPoints,100);
+    currPoints   = detectSURFFeatures(I, 'NumOctaves', 8, 'ROI', roi);
     currFeatures = extractFeatures(I, currPoints, 'Upright', true);    
     indexPairs   = matchFeatures(prevFeatures, currFeatures, ...
         'MaxRatio', .7, 'Unique',  true);
@@ -66,9 +62,6 @@ for i = 2:numel(images)
     % Select matched points.
     matchedPoints1 = prevPoints(indexPairs(:, 1));
     matchedPoints2 = currPoints(indexPairs(:, 2));
-    
-    
-    
     
     % Estimate the camera pose of current view relative to the previous view.
     % The pose is computed up to scale, meaning that the distance between
@@ -108,16 +101,8 @@ for i = 2:numel(images)
     % Store the refined camera poses.
     vSet = updateView(vSet, camPoses);
 
-    
-    
     prevFeatures = currFeatures;
     prevPoints   = currPoints;  
-    %input('Press enter');
-    % Show matched points
-    %figure; ax = axes;
-    %showMatchedFeatures(images{i-1},I,matchedPoints1,matchedPoints2,'Parent',ax);
-    %title(ax, 'Putative point matches');
-    %legend(ax,'Matched points 1','Matched points 2');
 end
 
 
@@ -147,3 +132,81 @@ zlim([loc1(3)-1, loc1(3)+20]);
 camorbit(0, -30);
 
 title('Refined Camera Poses');
+
+
+
+%% Read and undistort the first image
+I = images{1};
+
+%% Detect corners in the first image.
+prevPoints = detectMinEigenFeatures(I, 'MinQuality', 0.001);
+
+%% Create the point tracker object to track the points across views.
+tracker = vision.PointTracker('MaxBidirectionalError', 1, 'NumPyramidLevels', 6);
+
+%% Initialize the point tracker.
+prevPoints = prevPoints.Location;
+initialize(tracker, prevPoints, I);
+
+%% Store the dense points in the view set.
+
+vSet = updateConnection(vSet, 1, 2, 'Matches', zeros(0, 2));
+vSet = updateView(vSet, 1, 'Points', prevPoints);
+
+%% Track the points across all views.
+for i = 2:numel(images)
+    % Read and undistort the current image.
+    I = images{i}; 
+    
+    % Track the points.
+    [currPoints, validIdx] = step(tracker, I);
+    
+    % Clear the old matches between the points.
+    if i < numel(images)
+        vSet = updateConnection(vSet, i, i+1, 'Matches', zeros(0, 2));
+    end
+    vSet = updateView(vSet, i, 'Points', currPoints);
+    
+    % Store the point matches in the view set.
+    matches = repmat((1:size(prevPoints, 1))', [1, 2]);
+    matches = matches(validIdx, :);        
+    vSet = updateConnection(vSet, i-1, i, 'Matches', matches);
+end
+
+%% Find point tracks across all views.
+tracks = findTracks(vSet);
+
+%% Find point tracks across all views.
+camPoses = poses(vSet);
+
+%% Triangulate initial locations for the 3-D world points.
+xyzPoints = triangulateMultiview(tracks, camPoses,...
+    intrinsics);
+
+%% Refine the 3-D world points and camera poses.
+[xyzPoints, camPoses, reprojectionErrors] = bundleAdjustment(...
+    xyzPoints, tracks, camPoses, intrinsics, 'FixedViewId', 1, ...
+    'PointsUndistorted', true);
+
+%% Display the refined camera poses.
+figure;
+plotCamera(camPoses, 'Size', 0.2);
+hold on
+
+% Exclude noisy 3-D world points.
+%goodIdx = (reprojectionErrors < 5);
+
+%% Display the dense 3-D world points.
+pcshow(xyzPoints(goodIdx, :), 'VerticalAxis', 'y', 'VerticalAxisDir', 'down', ...
+    'MarkerSize', 45);
+grid on
+hold off
+
+%% Specify the viewing volume.
+loc1 = camPoses.AbsolutePose(1).Translation;
+xlim([loc1(1)-5, loc1(1)+4]);
+ylim([loc1(2)-5, loc1(2)+4]);
+zlim([loc1(3)-1, loc1(3)+20]);
+camorbit(0, -30);
+
+title('Dense Reconstruction');
