@@ -3,13 +3,13 @@ clear;
 clc;
 close all;
 %%  get a list of all image file names in the directory.
-%imageDir = 'Datasets/Dataset_B';
-imageDir = 'Dataset_A';
+imageDir = 'Datasets/Dataset_C';
+%imageDir = 'Dataset_A';
 imds = imageDatastore(imageDir);
 
 % Display the images.
 figure
-montage(imds.Files, 'Size', [5, 2]);
+montage(imds.Files, 'Size', [3, 2]);
 
 % Convert the images to grayscale.
 images = cell(1, numel(imds.Files));
@@ -20,21 +20,21 @@ end
 I=images{1};
 title('Input Image Sequence');
 %% Get intrinsic parameters of the camera
+%load('intrinsics/intrinsics_postOCR');
 load('intrinsics/intrinsics_uavision_crop');
 
 %% get initial pose
-%pitch=deg2rad(-90)+deg2rad(-10); 
-%roll=0;
-%yaw=deg2rad(72);
-%Z=0;%m
+pitch=deg2rad(-90)+deg2rad(-10); 
+roll=deg2rad(0);
+yaw=deg2rad(72);
+camera_z=939;%m
 %%  Detect features. Increasing 'NumOctaves' helps detect large-scale
 % features in high-resolution images. Use an ROI to eliminate spurious
 % features around the edges of the image.
 border = 50;%50
 roi = [border, border, size(I, 2)- 2*border, size(I, 1)- 2*border]; %[x y width height]
-prevPoints=detectKAZEFeatures(I);
-% prevPoints=selectStrongest(prevPoints,100);
-%prevPoints   = detectSURFFeatures(I, 'NumOctaves', 8, 'ROI', roi);
+%prevPoints=detectORBFeatures(I);
+prevPoints   = detectSURFFeatures(I, 'NumOctaves', 8, 'ROI', roi);
 
 %% Extract features. Using 'Upright' features improves matching, as long as
 % the camera motion involves little or no in-plane rotation.
@@ -48,17 +48,16 @@ vSet = imageviewset;
 %% Add the first view. Place the camera associated with the first view
 % and the origin, oriented along the Z-axis.
 viewId = 1;
-%vSet = addView(vSet, viewId, rigid3d(eul2rotm([roll pitch yaw],'XYZ'),[0 0 Z]), 'Points', prevPoints);
-vSet = addView(vSet, viewId, rigid3d, 'Points', prevPoints);
+vSet = addView(vSet, viewId, rigid3d(eul2rotm([roll pitch yaw],'XYZ'),[0 0 camera_z]), 'Points', prevPoints);
+%vSet = addView(vSet, viewId, rigid3d, 'Points', prevPoints);
 
 for i = 2:numel(images)
     % Undistort the current image. (deprec)
     I = images{i};
     
     % Detect, extract and match features.
-    %currPoints   = detectSURFFeatures(I, 'NumOctaves', 8, 'ROI', roi);
-    currPoints = detectKAZEFeatures(I);
-%     currPoints=selectStrongest(currPoints,100);
+    currPoints   = detectSURFFeatures(I, 'NumOctaves', 8, 'ROI', roi);
+    %currPoints = detectORBFeatures(I);
     currFeatures = extractFeatures(I, currPoints, 'Upright', true);    
     indexPairs   = matchFeatures(prevFeatures, currFeatures, ...
         'MaxRatio', .7, 'Unique',  true);
@@ -112,38 +111,15 @@ for i = 2:numel(images)
     
     prevFeatures = currFeatures;
     prevPoints   = currPoints;  
-    %input('Press enter');
-    % Show matched points
-    %figure; ax = axes;
-    %showMatchedFeatures(images{i-1},I,matchedPoints1,matchedPoints2,'Parent',ax);
-    %title(ax, 'Putative point matches');
-    %legend(ax,'Matched points 1','Matched points 2');
+    
+    
+    % matched points
+    figure; ax = axes;
+    showMatchedFeatures(images{i-1},I,matchedPoints1,matchedPoints2,'Parent',ax);
+    title(ax, 'Putative point matches');
+    legend(ax,'Matched points 1','Matched points 2');
 end
 
-
-
-
-%% Display camera poses.
-camPoses = poses(vSet);
-figure;
-plotCamera(camPoses, 'Size', 0.2);
-hold on
-
-%% Exclude noisy 3-D points.
-goodIdx = (reprojectionErrors < 5);
-xyzPoints = xyzPoints(goodIdx, :);
-
-%% Display the 3-D points.
-pcshow(xyzPoints, 'VerticalAxis', 'y', 'VerticalAxisDir', 'down', ...
-    'MarkerSize', 45);
-grid on
-hold off
-
-%% Specify the viewing volume.
-loc1 = camPoses.AbsolutePose(1).Translation;
-xlim([loc1(1)-5, loc1(1)+4]);
-ylim([loc1(2)-5, loc1(2)+4]);
-zlim([loc1(3)-1, loc1(3)+20]);
-camorbit(0, -30);
-
-title('Refined Camera Poses');
+%% save xyzpoints and camera poses
+%file_name=strcat('SFM_results/results_',datestr(now,'mm-dd-yyyy HH-MM'));
+%save(file_name,'xyzPoints','camPoses','camera_z');

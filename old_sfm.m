@@ -3,8 +3,8 @@ clear;
 clc;
 close all;
 %%  get a list of all image file names in the directory.
-%imageDir = 'Datasets/Dataset_B';
-imageDir = 'Dataset_A';
+imageDir = 'Datasets/Dataset_C';
+%imageDir = 'Dataset_A';
 imds = imageDatastore(imageDir);
 
 % Display the images.
@@ -26,7 +26,7 @@ load('intrinsics/intrinsics_uavision_crop');
 pitch=deg2rad(-90)+deg2rad(-10); 
 roll=0;
 yaw=deg2rad(72);
-Z=0;%m
+Z=949;%m
 %%  Detect features. Increasing 'NumOctaves' helps detect large-scale
 % features in high-resolution images. Use an ROI to eliminate spurious
 % features around the edges of the image.

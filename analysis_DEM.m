@@ -10,11 +10,11 @@ load coastlines;
 figure();
 worldmap('portugal');
 plotm(coastlat,coastlon)
-[LAT,LON]=inputm(1); 
+[LAT,LON]=inputm(1);  %#ok<*ASGLU>
 
 %% Or use the uavision dataset coordinates
-%LAT=38.81906;
-%LON=-8.54110;
+LAT=39.82026;
+LON=-8.54395;
 
 %% Determine the height of the point and show it in 2D and 3D
 % Determine height for a point
@@ -35,7 +35,7 @@ hold on;
 geoshow(LAT, LON, 'DisplayType', 'Point', 'Marker', '+', 'Color', 'red');
 
 % Show map around point
-window=20;
+window=60;%in cells
 small_A=A(A_lat-window:A_lat+window,A_lon-window:A_lon+window);
 figure();
 surf(small_A);
@@ -43,5 +43,5 @@ hold on;
 plot3(window+1,window+1,Z,'ro','MarkerSize',5);
 
 %% save croped DEM as a matrix
-str=strcat('DEMs',int2str(LAT*1e4),'_',int2str(LON*1e4),'.mat');
+str=strcat('DEMs/',int2str(LAT*1e4),'_',int2str(LON*1e4),'.mat');
 save(str,'small_A');

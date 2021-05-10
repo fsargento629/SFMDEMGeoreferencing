@@ -1,9 +1,10 @@
 %% Clear
 clear;
 %% camera intrisics
+I=imread('Datasets/Dataset_E/01.png');
 focalLength=[1063.17,1063.17];
-principalPoint=[520,250];
-imageSize=[940,630];
+principalPoint=[505,270];
+imageSize=[926,631];
 intrinsics = cameraIntrinsics(focalLength,principalPoint,imageSize);
 %% load video and show a frame 
 v=VideoReader('Video FOGO_1.avi');

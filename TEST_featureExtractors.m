@@ -2,7 +2,7 @@
 % load images
 clear;
 close all;
-imageDir = 'Datasets/Dataset_B';
+imageDir = 'Datasets/Dataset_C';
 
 imds = imageDatastore(imageDir);
 images = cell(1, numel(imds.Files));
