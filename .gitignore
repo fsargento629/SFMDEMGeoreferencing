@@ -4,3 +4,5 @@ REMs/
 UAVision_Dataset/
 Datasets/
 *.avi
+OCR_trainer/
+simple_ocr/

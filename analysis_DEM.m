@@ -34,14 +34,20 @@ geoshow(coast);
 hold on;
 geoshow(LAT, LON, 'DisplayType', 'Point', 'Marker', '+', 'Color', 'red');
 
-% Show map around point
+% make X and Y vectors for scale 
 window=60;%in cells
 small_A=A(A_lat-window:A_lat+window,A_lon-window:A_lon+window);
-figure();
-surf(small_A);
-hold on;
-plot3(window+1,window+1,Z,'ro','MarkerSize',5);
+res=30;
+DEM_X=res*size(small_A,1)/-2:res:res*size(small_A,1)/2; DEM_X=DEM_X(1:size(small_A,1));
+DEM_Y=res*size(small_A,2)/-2:res:res*size(small_A,2)/2; DEM_Y=DEM_Y(1:size(small_A,2));
 
+
+% Show map around point
+figure();
+surf(DEM_X,DEM_Y,small_A);
+xlabel('X (m)');
+ylabel('Y (m)');
+zlabel('Z (m)');
 %% save croped DEM as a matrix
 str=strcat('DEMs/',int2str(LAT*1e4),'_',int2str(LON*1e4),'.mat');
 save(str,'small_A');

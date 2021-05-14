@@ -17,19 +17,10 @@ window_x=[90,720]; window_y=[135,1060];
 %imshow(I(x(1):x(2),y(1):y(2),:));
 %figure;
 %imshow(I);
-%% Build telemetry vector alongside image vector
-
-time=zeros(nframes,3); %h m ms
-pitch=zeros(nframes,1); heading=zeros(nframes,1);
-gps=zeros(nframes,2); % LAT LON
-altitude=zeros(nframes,1);
-speed=zeros(nframes,1);
-
+%% Build image dataset
 image_count=1;%to save the images as 01,02,...,09,10,...
 for i=1:nframes
-    
-    % get frame
-    I=read(v,frame1+(i-1)*rate);
+    I=read(v,round(frame1+(i-1)*rate));
     % crop image and save it
     if image_count>=10
         filename=strcat(dataset_name,'/',int2str(image_count),'.png');
@@ -38,6 +29,20 @@ for i=1:nframes
     end
     image_count=image_count+1;
     imwrite(I(window_x(1):window_x(2),window_y(1):window_y(2),:),filename);
+end
+
+%% Build telemetry vector 
+
+time=zeros(nframes,3); %h m ms
+pitch=zeros(nframes,1); heading=zeros(nframes,1);
+gps=zeros(nframes,2); % LAT LON
+altitude=zeros(nframes,1);
+speed=zeros(nframes,1);
+
+
+for i=1:nframes
+    I=read(v,round(frame1+(i-1)*rate));
+    disp(i);
     % detect time
     time_image=I(1:20,1:300,:);
     time_text=ocr(time_image,'CharacterSet','0123456789','TextLayout','Line');
@@ -89,11 +94,16 @@ for i=1:nframes
     pitch(i)=-n2;
     
     % detect gps
-    gps_image=I(640:680,1140:1260,:);
-    gps_text=ocr(gps_image,'CharacterSet','0123456789','TextLayout','Block');
-    gps_text=gps_text.Text;
-    gps(i,1)=str2double(gps_text(1:2))+1e-5*str2double(gps_text(4:9));
-    gps(i,2)=-str2double(gps_text(11))-1e-5*str2double(gps_text(13:19));
+    try
+        gps_image=I(640:680,1140:1260,:);
+        gps_text=ocr(gps_image,'CharacterSet','0123456789','TextLayout','Block');
+        gps_text=gps_text.Text;
+        gps(i,1)=str2double(gps_text(1:2))+1e-5*str2double(gps_text(4:9));
+        gps(i,2)=-str2double(gps_text(11))-1e-5*str2double(gps_text(13:19));
+    catch
+        fprintf("Error scanning gps\n");
+    end
+    
     % detect altitude
     altitude_image=I(680:700,1140:1200,:);
     altitude_text=ocr(altitude_image,'CharacterSet','0123456789','TextLayout','Line');
@@ -106,4 +116,4 @@ end
 
 %% save vectors in the directory of the images
 filename=strcat(dataset_name,'/','extrinsics.mat');
-save(filename,'time','pitch','gps','altitude','speed');
+save(filename,'time','pitch','heading','gps','altitude','speed');

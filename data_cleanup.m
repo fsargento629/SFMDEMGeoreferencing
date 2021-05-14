@@ -11,12 +11,11 @@ imshow(I1);
 figure();
 imshow(I2);
 %% Remove frames and store them
-inputm("Press enter\n");
-for i=1114:5:2670
-    frame=read(v,i);
-    frame=frame(90:720,120:1060,:); %crop
-    frame_name=strcat(int2str((i-1114)/5 +1),'.png');
-    imwrite(frame, strcat('Dataset/',frame_name));
+input("Press enter\n");
+for i=0:5:55
+    frame=read(v,i*30+1);
+    frame_name=strcat(int2str(i),'.png');
+    imwrite(frame, strcat('UAVision_Dataset/',frame_name));
 end
 
 %% show image
@@ -30,6 +29,8 @@ imshow(time);
 time_text=ocr(time,'CharacterSet','0123456789','TextLayout','Line');
 disp(time_text.Text);
 %% Find heading
+t=input("Insert time frame:\n");
+I=read(v,t*30+1);
 % Crop heading
 heading=I(72:88,470:810,:);
 %heading=I(72:88,510:540,:); % correct
@@ -38,6 +39,7 @@ imshow(heading);
 % heading loop
 n1=NaN;
 for y=470:5:810
+    disp((810-y)/(810-470));
     heading=I(72:88,y:y+30,:);
     heading_text=ocr(heading,'CharacterSet','0123456789','TextLayout','Word');
     text=heading_text.Text;
@@ -59,7 +61,9 @@ disp(n2);
 
 %% Find pitch
 % Crop pitch
-pitch=I(190:530,86:141,:);
+t=input("Insert time frame:\n");
+I=read(v,t*30+1);imshow(I);
+pitch=I(190:530,105:141,:);
 %pitch=I(370:400,90:135,:);
 %imshow(pitch);
 pitch_text=ocr(pitch,'CharacterSet','0123456789','TextLayout','Word');
@@ -67,15 +71,15 @@ pitch_text=ocr(pitch,'CharacterSet','0123456789','TextLayout','Word');
 
 % pitch loop
 n1=NaN;
-for x=170:5:500
-    pitch=I(x:x+30,90:135,:);
+for x=170:2:500
+    pitch=I(x:x+30,105:135,:);
     pitch_text=ocr(pitch,'CharacterSet','0123456789','TextLayout','Word');
     text=pitch_text.Text;
     n2=str2double(text);
-        
+    disp(x);
     if n1==n2
         count=count+1;  
-        if count==3
+        if count==6
             break;
         end
     else

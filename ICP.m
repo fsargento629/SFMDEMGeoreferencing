@@ -25,4 +25,5 @@ tform=pcregistericp(moving,fixed);
 disp(tform.Rotation);
 disp(tform.Translation)
 %% show both pcls
+figure();
 pcshowpair(moving,fixed);

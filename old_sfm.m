@@ -9,7 +9,7 @@ imds = imageDatastore(imageDir);
 
 % Display the images.
 figure
-montage(imds.Files, 'Size', [5, 2]);
+montage(imds.Files, 'Size', [3, 2]);
 
 % Convert the images to grayscale.
 images = cell(1, numel(imds.Files));
@@ -20,7 +20,7 @@ end
 I=images{1};
 title('Input Image Sequence');
 %% Get intrinsic parameters of the camera
-load('intrinsics/intrinsics_uavision_crop');
+load('intrinsics/intrinsics');
 
 %% get initial pose
 pitch=deg2rad(-90)+deg2rad(-10); 

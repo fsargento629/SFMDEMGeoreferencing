@@ -3,9 +3,9 @@ clear;
 clc;
 load('DEMs/uavision_DEM');
 res=30;%m
-z_sigma=60; %m^2
+z_sigma=20^2; %m^2 its sigma squared
 %% create a noisy point set
-ppsquare=30;
+ppsquare=5;
 pcl=zeros(ppsquare*size(small_A,1)*size(small_A,2),3);
 
 for L=1:size(small_A,1)
@@ -35,7 +35,7 @@ for L=1:size(new_A,1)
         for i=1:N
             D(i)=norm(pcl(i,1:2)-X);
         end
-        mask= D<30;
+        mask= D<1000;
         W = 1./(D(mask).^p);
         Z(L,C)=sum(W.*pcl(mask,3))/sum(W);
         disp([L,C]);
@@ -46,6 +46,7 @@ figure();
 surf(Z);
 hold on;
 surf(small_A);
-RMSE=mean((abs(Z-small_A)).^2,'all');
+DIF=Z-small_A;
+RMSE=rms(DIF,'all');
 disp(RMSE);
-save('REMs/rem1.mat','Z');
+%save('REMs/rem1.mat','Z');

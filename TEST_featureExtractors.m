@@ -2,8 +2,8 @@
 % load images
 clear;
 close all;
-imageDir = 'Datasets/Dataset_C';
-
+%imageDir = 'Datasets/Dataset_C';
+imageDir = 'Datasets/B';
 imds = imageDatastore(imageDir);
 images = cell(1, numel(imds.Files));
 for i = 1:numel(imds.Files)
@@ -31,7 +31,8 @@ points2 = detectHarrisFeatures(I2);
 %% KAZE
 points1 = detectKAZEFeatures(I1);
 points2 = detectKAZEFeatures(I2);
-
+points1 = selectStrongest(points1,1000);
+points2 = selectStrongest(points2,1000);
 %% MinEigen
 points1 = detectMinEigenFeatures(I1);
 points2 = detectMinEigenFeatures(I2);
@@ -53,11 +54,11 @@ points1 = detectSURFFeatures(I1);
 points2 = detectSURFFeatures(I2);
 
 %% extract match  and visualize features
-[f1, vpts1] = extractFeatures(I1, points1);
-[f2, vpts2] = extractFeatures(I2, points2);
+[f1, vpts1] = extractFeatures(I1, points1, 'Upright', true);
+[f2, vpts2] = extractFeatures(I2, points2, 'Upright', true);
 
 % match features
-indexPairs = matchFeatures(f1, f2) ;
+indexPairs = matchFeatures(f1, f2,'MaxRatio', .7, 'Unique',  true) ;
 matchedPoints1 = vpts1(indexPairs(:, 1));
 matchedPoints2 = vpts2(indexPairs(:, 2));
 
