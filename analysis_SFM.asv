@@ -52,7 +52,7 @@ ylabel('Estimated height');
 
 %% plot XY coordinates of points
 figure();
-scatter(X(mask),Y(mask));   
+scatter(X(mask),Y(mask));
 hold on;
 viscircles([0,0],100);
 
@@ -68,11 +68,9 @@ plot3(camera_traj(:,1),camera_traj(:,2),camera_traj(:,3),'k*--');
 %% Estimated camera orientation
 orientation=zeros(size(camPoses,1),3);
 for i=1:size(camPoses,1)
-    orientation(i,:)=rad2deg(rotm2eul(camPoses(i,2).AbsolutePose.Rotation));
+    orientation(i,:=rad2deg(rotm2eul(camPoses(i,2).AbsolutePose.Rotation));
 end
-figure;plot(orientation(:,1));title('Camera heading');
-figure;plot(orientation(:,2));title('Camera pitch');
-figure;plot(orientation(:,3)); title('Camera roll');
+plot(orientation);
 
 %% plot real camera trajectory
 figure();
@@ -102,12 +100,7 @@ imshow(I);hold on;scatter(pixels(:,1),pixels(:,2),'r*');
 
 %% Check triangulate multiview traiangulation
 xyz_est=triangulateMultiview(tracks, camPoses, intrinsics);
-
-% Plot triangulated points in 3D with cameras
-figure;plot3(xyz_est(:,1),xyz_est(:,2),xyz_est(:,3),'o');
-hold on; plotCamera(camPoses, 'Size', 20,'Color','k');
-
-% view in 2D
+plot3(xyz_est(:,1),xyz_est(:,2),xyz_est(:,3),'o');
 figure; plot(xyz_est(:,1),xyz_est(:,2),'ko')
 %% check outliers
 % change bad_mask to see different types of outliers

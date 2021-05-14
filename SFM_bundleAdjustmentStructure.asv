@@ -29,7 +29,8 @@ origin = [gps(1,1), gps(1,2), altitude(1)];
 cam_z=altitude;
 cam_pos=[cam_x cam_y cam_z];
 % get angular parameters
-cam_pitch=deg2rad(pitch)-deg2rad(90); 
+cam_pitch=ones(size(pitch))*
+%cam_pitch=deg2rad(pitch)-deg2rad(90); 
 cam_roll=deg2rad(180)*ones(size(cam_pitch));
 % yaw= camera_heading + coordinate transformcorrection
 cam_yaw=-deg2rad(heading)-deg2rad(90);
