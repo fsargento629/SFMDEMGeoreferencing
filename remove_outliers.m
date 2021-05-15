@@ -25,9 +25,14 @@ function [p,t] = remove_outliers(xyzPoints,tracks,camera_pos,camera_ang)
   % 5) Remove points if they are too far away (in 2D)
     D_2=sqrt(p(:,1).^2+p(:,2).^2);
     out_mask= D_2>5000;
-    p=p(~out_mask
+    p=p(~out_mask,:);
     t=t(~out_mask);
     
-  % 6) Remove points if they are 
+    
+   % 6) Remove points if their height is not in the search zone
+   % this zone depends on the DEM
+    out_mask= p(:,3)<-1000 | p(:,3)>0;
+    p=p(~out_mask,:);
+    t=t(~out_mask);
 end
 

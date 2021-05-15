@@ -94,7 +94,12 @@ for i = 2:numel(images)
     % Refine the 3-D world points and camera poses.
     [xyzPoints,reprojectionErrors] = bundleAdjustmentStructure(xyzPoints, ...
         tracks, camPoses, intrinsics);
-
+    
+    % Remove points with high reprojection error
+    good_mask= reprojectionErrors<20;
+    xyzPoints=xyzPoints(good_mask,:);
+    tracks=tracks(good_mask);
+    reprojectionErrors=reprojectionErrors(good_mask);
     % Store the refined camera poses.
     %vSet = updateView(vSet, camPoses);
 
@@ -105,12 +110,10 @@ for i = 2:numel(images)
     
     
     % matched points
-    figure; ax = axes;
-    showMatchedFeatures(images{i-1},I,matchedPoints1,matchedPoints2,'Parent',ax);
-    title(ax, 'Putative point matches');
-    legend(ax,'Matched points 1','Matched points 2');
+    %figure; ax = axes; showMatchedFeatures(images{i-1},I,matchedPoints1,matchedPoints2,'Parent',ax);
+    %legend(ax,'Matched points 1','Matched points 2');
 end
-
+[xyzPoints,tracks]=remove_outliers(xyzPoints,tracks,cam_pos,cam_ang);
 %% save xyzpoints and camera poses
 %file_name=strcat('SFM_results/results_',datestr(now,'dd-mm-yyyy HH-MM'));
 %save(file_name,'xyzPoints','camPoses','camera_z');
