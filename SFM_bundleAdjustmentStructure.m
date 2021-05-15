@@ -3,7 +3,7 @@ clear;
 clc;
 close all;
 %%  get a list of all image file names in the directory.
-dataset_name='A_30_1_35';
+dataset_name='B_1_2_11';%'A_30_1_35';
 imageDir = strcat('Datasets/',dataset_name);
 imds = imageDatastore(imageDir);
 
@@ -23,19 +23,12 @@ title('Input Image Sequence');
 load('intrinsics/intrinsics');
 %% Get camera poses
 load(strcat('Datasets/',dataset_name,'/extrinsics'));
+
 % get translation parameter
 origin = [gps(1,1), gps(1,2), altitude(1)];
 [cam_x,cam_y] = latlon2local(gps(:,1),gps(:,2),altitude,origin);
 cam_z=-altitude;
 cam_pos=[cam_x cam_y cam_z];
-% get angular parameters
-%cam_pitch=deg2rad(pitch)-deg2rad(90); 
-%cam_pitch=zeros(5,1)+deg2rad(-0);
-%cam_roll=deg2rad(180)*ones(size(cam_pitch));
-%cam_roll=zeros(5,1);
-%cam_yaw=zeros(5,1)+deg2rad(0);
-%cam_yaw=-deg2rad(heading)-deg2rad(90);
-%cam_ang=[cam_roll cam_pitch cam_yaw];
 
 % new angles (N-E-D) %roll pitch yaw
 pitch=90+pitch;
@@ -97,10 +90,7 @@ for i = 2:numel(images)
     xyzPoints = triangulateMultiview(tracks, camPoses, intrinsics);
    
     % remove outliers from xyzPoints
-    D=sqrt(xyzPoints(:,1).^2+xyzPoints(:,2).^2);
-    good_mask=D<5000;
-    tracks=tracks(good_mask);
-    xyzPoints=xyzPoints(good_mask,:);
+    [xyzPoints,tracks]=remove_outliers(xyzPoints,tracks,cam_pos,cam_ang);
     % Refine the 3-D world points and camera poses.
     [xyzPoints,reprojectionErrors] = bundleAdjustmentStructure(xyzPoints, ...
         tracks, camPoses, intrinsics);
@@ -115,10 +105,10 @@ for i = 2:numel(images)
     
     
     % matched points
-    %figure; ax = axes;
-    %showMatchedFeatures(images{i-1},I,matchedPoints1,matchedPoints2,'Parent',ax);
-    %title(ax, 'Putative point matches');
-    %legend(ax,'Matched points 1','Matched points 2');
+    figure; ax = axes;
+    showMatchedFeatures(images{i-1},I,matchedPoints1,matchedPoints2,'Parent',ax);
+    title(ax, 'Putative point matches');
+    legend(ax,'Matched points 1','Matched points 2');
 end
 
 %% save xyzpoints and camera poses

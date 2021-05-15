@@ -2,7 +2,7 @@
 DEMs/
 REMs/
 UAVision_Dataset/
-Datasets/
+Datasets/OLD_datasets
 *.avi
 OCR_trainer/
 simple_ocr/

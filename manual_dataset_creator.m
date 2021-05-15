@@ -1,7 +1,7 @@
 %% Load video
 clear;
 clc;
-v=VideoReader('UAVision video_part1_720p.avi');
+v=VideoReader('UAVision video_part2_720p.avi');
 fprintf('Video Duration:%f\nFPS:%f\n',v.Duration,v.FrameRate);
 %% Select 1st frame, number of frames and time between frames
 frame1=input("Insert 1st frame's time:\n")*v.FrameRate;
