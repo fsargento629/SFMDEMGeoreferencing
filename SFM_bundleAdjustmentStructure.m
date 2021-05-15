@@ -26,14 +26,22 @@ load(strcat('Datasets/',dataset_name,'/extrinsics'));
 % get translation parameter
 origin = [gps(1,1), gps(1,2), altitude(1)];
 [cam_x,cam_y] = latlon2local(gps(:,1),gps(:,2),altitude,origin);
-cam_z=altitude;
+cam_z=-altitude;
 cam_pos=[cam_x cam_y cam_z];
 % get angular parameters
-cam_pitch=deg2rad(pitch)-deg2rad(90); 
-cam_roll=deg2rad(180)*ones(size(cam_pitch));
-% yaw= camera_heading + coordinate transformcorrection
-cam_yaw=-deg2rad(heading)-deg2rad(90);
-cam_ang=[cam_yaw cam_pitch cam_roll];
+%cam_pitch=deg2rad(pitch)-deg2rad(90); 
+%cam_pitch=zeros(5,1)+deg2rad(-0);
+%cam_roll=deg2rad(180)*ones(size(cam_pitch));
+%cam_roll=zeros(5,1);
+%cam_yaw=zeros(5,1)+deg2rad(0);
+%cam_yaw=-deg2rad(heading)-deg2rad(90);
+%cam_ang=[cam_roll cam_pitch cam_yaw];
+
+% new angles (N-E-D) %roll pitch yaw
+pitch=90+pitch;
+roll=zeros(5,1);
+yaw=heading+90;
+cam_ang=deg2rad([roll pitch yaw ] );
 %%  Detect features. Increasing 'NumOctaves' helps detect large-scale
 % features in high-resolution images. Use an ROI to eliminate spurious
 % features around the edges of the image.
@@ -44,7 +52,7 @@ prevPoints   = detectSURFFeatures(I, 'NumOctaves', 8, 'ROI', roi);
 
 %% Extract features. Using 'Upright' features improves matching, as long as
 % the camera motion involves little or no in-plane rotation.
-prevFeatures = extractFeatures(I, prevPoints, 'Upright', true);
+prevFeatures = extractFeatures(I, prevPoints);%, 'Upright', true);
 
 %% Create an empty imageviewset object to manage the data associated with each
 % view.
@@ -54,7 +62,7 @@ vSet = imageviewset;
 %% Add the first view. Place the camera associated with the first view
 % and the origin, oriented along the Z-axis.
 viewId = 1;
-vSet = addView(vSet, viewId, rigid3d(eul2rotm(cam_ang(1,:)),cam_pos(1,:)), 'Points', prevPoints);
+vSet = addView(vSet, viewId, rigid3d(eul2rotm(cam_ang(1,:),'XYZ'),cam_pos(1,:)), 'Points', prevPoints);
 %vSet = addView(vSet, viewId, rigid3d, 'Points', prevPoints);
 
 for i = 2:numel(images)
@@ -65,15 +73,15 @@ for i = 2:numel(images)
     currPoints   = detectSURFFeatures(I, 'NumOctaves', 8, 'ROI', roi);
     %currPoints = detectORBFeatures(I);
     currFeatures = extractFeatures(I, currPoints, 'Upright', true);    
-    indexPairs   = matchFeatures(prevFeatures, currFeatures, ...
-        'MaxRatio', .7, 'Unique',  true);
+    indexPairs   = matchFeatures(prevFeatures, currFeatures);%, ...
+        %'MaxRatio', .7, 'Unique',  true);
     
     % Select matched points.
     matchedPoints1 = prevPoints(indexPairs(:, 1));
     matchedPoints2 = currPoints(indexPairs(:, 2));
     
     % Add the current view to the view set.
-    vSet = addView(vSet, i, rigid3d(eul2rotm(cam_ang(i,:)),cam_pos(i,:)), 'Points', currPoints);
+    vSet = addView(vSet, i, rigid3d(eul2rotm(cam_ang(i,:),'XYZ'),cam_pos(i,:)), 'Points', currPoints);
 
     % Store the point matches between the previous and the current views.
     vSet = addConnection(vSet, i-1, i, 'Matches', indexPairs(:,:));
@@ -98,7 +106,7 @@ for i = 2:numel(images)
         tracks, camPoses, intrinsics);
 
     % Store the refined camera poses.
-    vSet = updateView(vSet, camPoses);
+    %vSet = updateView(vSet, camPoses);
 
     
     
