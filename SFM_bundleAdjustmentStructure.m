@@ -115,5 +115,5 @@ for i = 2:numel(images)
 end
 [xyzPoints,tracks]=remove_outliers(xyzPoints,tracks,cam_pos,cam_ang);
 %% save xyzpoints and camera poses
-%file_name=strcat('SFM_results/results_',datestr(now,'dd-mm-yyyy HH-MM'));
-%save(file_name,'xyzPoints','camPoses','camera_z');
+file_name=strcat('SFM_results/results_',dataset_name,'_',datestr(now,'dd-mm-yyyy HH-MM'));
+save(file_name);

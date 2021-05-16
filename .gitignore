@@ -1,8 +1,4 @@
 *.tif
-DEMs/
-REMs/
-UAVision_Dataset/
 Datasets/OLD_datasets
 *.avi
-OCR_trainer/
 simple_ocr/
