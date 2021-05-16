@@ -3,7 +3,7 @@ clear;
 clc;
 close all;
 %%  get a list of all image file names in the directory.
-dataset_name='B_1_2_11';%'A_30_1_35';
+dataset_name='B_1_2_10';%'A_30_1_35';
 imageDir = strcat('Datasets/',dataset_name);
 imds = imageDatastore(imageDir);
 
@@ -81,15 +81,18 @@ for i = 2:numel(images)
     
     % Find point tracks across all views.
     tracks = findTracks(vSet);
-
+    disp(size(tracks));
     % Get the table containing camera poses for all views.
     camPoses = poses(vSet);
 
     % Triangulate initial locations for the 3-D world points
     % And then  remove outliers
     xyzPoints = triangulateMultiview(tracks, camPoses, intrinsics);
-   
+    
     % remove outliers from xyzPoints
+    % first remove points behind the camera
+    
+    % then call a function to remove the rest of the outliers
     [xyzPoints,tracks]=remove_outliers(xyzPoints,tracks,cam_pos,cam_ang);
     % Refine the 3-D world points and camera poses.
     [xyzPoints,reprojectionErrors] = bundleAdjustmentStructure(xyzPoints, ...
@@ -115,5 +118,5 @@ for i = 2:numel(images)
 end
 [xyzPoints,tracks]=remove_outliers(xyzPoints,tracks,cam_pos,cam_ang);
 %% save xyzpoints and camera poses
-file_name=strcat('SFM_results/results_',dataset_name,'_',datestr(now,'dd-mm-yyyy HH-MM'));
-save(file_name);
+%file_name=strcat('SFM_results/results_',dataset_name,'_',datestr(now,'dd-mm-yyyy HH-MM'));
+%save(file_name);
