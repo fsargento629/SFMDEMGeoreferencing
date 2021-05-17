@@ -10,7 +10,16 @@ disp(cameraParams.Intrinsics);
 I=imread('Datasets/Dataset_E/01.png');
 figure;imshow(I);
 %% Create intriniscs object
+% these are the estimated UAVision intrinisics
 focalLength=[1063.17,1063.17];
 principalPoint=[505,270];
 imageSize=[631,926]; % switched with principal on purpose
 intrinsics = cameraIntrinsics(focalLength,principalPoint,imageSize);
+
+%% Test intriniscs
+clear;
+focalLength=[1063.17,1063.17]*1.2;
+principalPoint=[505,270];
+imageSize=[631,926]; % switched with principal on purpose
+intrinsics = cameraIntrinsics(focalLength,principalPoint,imageSize);
+save('Intrinsics/bad_intrinsics','intrinsics');

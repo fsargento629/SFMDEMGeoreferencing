@@ -1,16 +1,17 @@
 %% clear
 clear; clc;
-
+%R = angle2dcm( roll, pitch, yaw );
 %% create cameras
 t=[0 0 0];
-Y=20;
-X=0;
-Z=90+0; % 90 +heading
-cam_ang=deg2rad([X Y Z]); % roll pitch yaw
-R=eul2rotm(cam_ang,'XYZ');
+yaw=deg2rad(90-150); 
+pitch=deg2rad(90-20); 
+roll=deg2rad(0); 
+R = angle2dcm( yaw, pitch, roll,'ZYZ' );
+
 vset=imageviewset;
 vset=addView(vset,1,rigid3d(R,t));
 %% view camera
 figure;camPoses=poses(vset);
 plotCamera(camPoses);
 xlabel('X East');ylabel('Y North');zlabel('Z Down');
+set(gca, 'ZDir','reverse');

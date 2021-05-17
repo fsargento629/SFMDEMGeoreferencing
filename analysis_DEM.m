@@ -13,9 +13,12 @@ load coastlines;
 %[LAT,LON]=inputm(1);  %#ok<*ASGLU>
 
 %% Or use the uavision dataset coordinates
-LAT=39.82026;
-LON=-8.54395;
+%LAT=39.82026;
+%LON=-8.54395;
 
+%% moinhos
+LAT=39.0342981;
+LON=-9.2182466;
 
 %% Determine the height of the point and show it in 2D and 3D
 % Determine height for a point
