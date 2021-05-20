@@ -3,15 +3,17 @@ clear;
 clc;
 close all;
 %% SFM parameters
-dataset_name='B_1_2_20';%'A_30_1_35';
-detector="KAZE";
-features_per_image = 2000;
+dataset_name='B_1_2_33';
+detector="ORB";
+features_per_image = 8000;
 SURF_octave_number=8;
 Upright_matching= true;
 outlier_detection=true;
-input_mask=[1 1 1 1 1];
+input_mask=[1 1 1 0 1];
 error_on_off=true;
-reprojection_error_threshold=20;
+reprojection_error_threshold=40;
+save_results=false;
+see_matches=true;
 %%  get a list of all image file names in the directory.
 
 imageDir = strcat('Datasets/',dataset_name);
@@ -49,6 +51,7 @@ yaw=deg2rad(90-heading);
 % features in high-resolution images. Use an ROI to eliminate spurious
 % features around the edges of the image.
 % SURF
+tic;
 if detector=="SURF"
     border = 50;
     %[x y width height]
@@ -56,19 +59,19 @@ if detector=="SURF"
     
     
     prevPoints   = detectSURFFeatures(I, 'NumOctaves', SURF_octave_number, 'ROI', roi);
-    prevFeatures = extractFeatures(I, prevPoints, 'Upright', Upright_matching);
+    [prevFeatures,vpts1] = extractFeatures(I, prevPoints, 'Upright', Upright_matching);
 end
 
 % ORB
 if detector=="ORB"
     prevPoints=selectStrongest(detectORBFeatures(I),features_per_image);    
-    prevFeatures = extractFeatures(I, prevPoints); %#ok<*NASGU>
+    [prevFeatures,vpts1] = extractFeatures(I, prevPoints); %#ok<*NASGU>
 end
 
 % KAZE
 if detector=="KAZE"
     prevPoints   = selectStrongest(detectKAZEFeatures(I),features_per_image);
-    prevFeatures = extractFeatures(I, prevPoints, 'Upright', true);
+    [prevFeatures,vpts1] = extractFeatures(I, prevPoints, 'Upright', true);
 end
 
 
@@ -85,32 +88,33 @@ vSet = addView(vSet, viewId, rigid3d(angle2dcm( yaw(1), pitch(1), roll(1),'ZYZ')
 
 for i = 2:numel(images)
    I = images{i};
-    
+   disp(i);
     % Detect features.
     if detector=="SURF"
         currPoints   = detectSURFFeatures(I, 'NumOctaves', SURF_octave_number, 'ROI', roi);
-        currFeatures = extractFeatures(I, currPoints, 'Upright', true);
+        [currFeatures,vpts2] = extractFeatures(I, currPoints, 'Upright', true);
     end
 
     if detector=="ORB"
         currPoints = selectStrongest(detectORBFeatures(I),features_per_image);
-        currFeatures = extractFeatures(I, currPoints);
+        [currFeatures,vpts2] = extractFeatures(I, currPoints);
     end
 
     if detector=="KAZE"
         currPoints   = selectStrongest(detectKAZEFeatures(I),features_per_image);
-        currFeatures = extractFeatures(I, currPoints, 'Upright', true);
+        [currFeatures,vpts2] = extractFeatures(I, currPoints, 'Upright', true);
 
     end
 
     % Extract and match features
 
 
-    indexPairs   = matchFeatures(prevFeatures, currFeatures,'MaxRatio', .7, 'Unique',  true);
+    indexPairs   = matchFeatures(prevFeatures,  ... 
+        currFeatures,'MaxRatio', .7, 'Unique',  true);
 
     % Select matched points.
-    matchedPoints1 = prevPoints(indexPairs(:, 1));
-    matchedPoints2 = currPoints(indexPairs(:, 2));
+    matchedPoints1 = vpts1(indexPairs(:, 1));
+    matchedPoints2 = vpts2(indexPairs(:, 2));
 
     % Add the current view to the view set.
     vSet = addView(vSet, i, rigid3d(angle2dcm( yaw(i), pitch(i), roll(i),'ZYZ' ), ...
@@ -130,39 +134,46 @@ for i = 2:numel(images)
     xyzPoints = triangulateMultiview(tracks, camPoses, intrinsics);
 
     % remove outliers from xyzPoints
-    % first remove points behind the camera
-
-    % then call a function to remove the rest of the outliers
     if outlier_detection== true
-        [xyzPoints,tracks]=remove_outliers(...
-            xyzPoints,tracks,cam_pos,[yaw(i) pitch(i) roll(i)],input_mask);
+        [xyzPoints,tracks,~]=remove_outliers(...
+            xyzPoints,tracks,[],cam_pos(i,:), ... 
+            [yaw(i) pitch(i) roll(i)],input_mask);
     end
-
-
-    % Refine the 3-D world points and camera poses.
-    [xyzPoints,reprojectionErrors] = bundleAdjustmentStructure(xyzPoints, ...
-        tracks, camPoses, intrinsics);
-
+    
+    % Refine the 3-D world points 
+    if ~isempty(xyzPoints)
+        [xyzPoints,reprojectionErrors] = bundleAdjustmentStructure(xyzPoints, ...
+            tracks, camPoses, intrinsics);
+    end
     % Remove points with high reprojection error
-    if error_on_off== true
+    if error_on_off== true && ~isempty(xyzPoints)
         good_mask= reprojectionErrors<reprojection_error_threshold;
         xyzPoints=xyzPoints(good_mask,:);
         tracks=tracks(good_mask);
         reprojectionErrors=reprojectionErrors(good_mask);
     end
 
-
+    
 
     prevFeatures = currFeatures;
     prevPoints   = currPoints;
-
+    vpts1=vpts2;
     
     % matched points
-    figure; ax = axes; showMatchedFeatures(images{i-1},I,matchedPoints1,matchedPoints2,'Parent',ax);
-    legend(ax,'Matched points 1','Matched points 2');
+    if see_matches ==true
+        figure; ax = axes; showMatchedFeatures(images{i-1},I,matchedPoints1,matchedPoints2,'Parent',ax);
+        legend(ax,'Matched points 1','Matched points 2');
+    end
 end
-%[xyzPoints,tracks]=remove_outliers(xyzPoints,tracks,cam_pos,[yaw(i) pitch(i) roll(i)]);
+if outlier_detection== true
+        [xyzPoints,tracks,reprojectionErrors]=remove_outliers(...
+            xyzPoints,tracks,reprojectionErrors,cam_pos(i,:), ... 
+            [yaw(i) pitch(i) roll(i)],input_mask);
+end
+toc;
 close all;
 %% save xyzpoints and camera poses
-%file_name=strcat('SFM_results/results_',dataset_name,'_',datestr(now,'dd-mm-yyyy HH-MM'));
-%save(file_name);
+if save_results== true
+    file_name=strcat('SFM_results/results_',dataset_name,'_',datestr(now,'dd-mm-yyyy HH-MM'));
+    save(file_name);
+end
