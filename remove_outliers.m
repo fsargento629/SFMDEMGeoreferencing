@@ -35,7 +35,7 @@ function [p,t,r] = remove_outliers(xyzPoints,tracks,reprojectionErrors,camera_po
   % 4) Remove points if they are too far away (in 2D)
     if input_mask(4)==1
         D_2=sqrt((p(:,1)-camera_pos(1)).^2+(p(:,2)-camera_pos(2)).^2);
-        out_mask= D_2>10000;
+        out_mask= D_2>20000;
         p=p(~out_mask,:);
         t=t(~out_mask);
         r=r(~out_mask);

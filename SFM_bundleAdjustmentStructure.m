@@ -3,17 +3,17 @@ clear;
 clc;
 close all;
 %% SFM parameters
-dataset_name='B_1_2_33';
-detector="ORB";
-features_per_image = 8000;
+dataset_name='B_1_2_10';
+detector="KAZE";
+features_per_image = 1500;
 SURF_octave_number=8;
 Upright_matching= true;
 outlier_detection=true;
-input_mask=[1 1 1 0 1];
+input_mask=[1 0 0 1 0];
 error_on_off=true;
 reprojection_error_threshold=40;
 save_results=false;
-see_matches=true;
+see_matches=false;
 %%  get a list of all image file names in the directory.
 
 imageDir = strcat('Datasets/',dataset_name);
@@ -140,10 +140,12 @@ for i = 2:numel(images)
             [yaw(i) pitch(i) roll(i)],input_mask);
     end
     
-    % Refine the 3-D world points 
+    % Refine the 3-D world points and camera poses
     if ~isempty(xyzPoints)
-        [xyzPoints,reprojectionErrors] = bundleAdjustmentStructure(xyzPoints, ...
+        [xyzPoints,camPoses,reprojectionErrors] = bundleAdjustment(xyzPoints, ...
             tracks, camPoses, intrinsics);
+          % Store the refined camera poses.
+          vSet = updateView(vSet, camPoses);
     end
     % Remove points with high reprojection error
     if error_on_off== true && ~isempty(xyzPoints)

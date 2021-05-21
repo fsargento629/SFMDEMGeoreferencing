@@ -1,0 +1,115 @@
+%% load points and camera poses
+clear;
+load('pcloud_small');
+%% plot "real" camera poses
+origin = [gps(1,1), gps(1,2), altitude(1)];
+[cam_x,cam_y] = latlon2local(gps(:,1),gps(:,2),altitude,origin);
+cam_z=-altitude;
+cam_pos=[cam_x cam_y cam_z];
+figure;
+plot3(cam_pos(:,1),cam_pos(:,2),cam_pos(:,3),'--ko');
+set(gca, 'ZDir','reverse')
+%% plot estimated camera poses
+cams=zeros(size(camPoses,1),3);
+for i=1:size(camPoses,1)
+    cams(i,:)=camPoses.AbsolutePose(i).Translation;
+end
+figure; plot3(cams(:,1),cams(:,2),cams(:,3),'r--o');
+
+%% Show original pointcloud
+figure; pcshow(xyzPoints);
+xlabel("X");ylabel("Y");zlabel("Z");
+zlim([0,30]);
+%% first rotate the point cloud
+% yaw=0;
+% p=deg2rad(90-20);
+% roll=0;
+% R=angle2dcm( yaw, p, roll,'ZYZ');
+% eul = [0 p 0];
+% A = eul2tform(eul);
+% tform = affine3d(A);
+% pcloud2 = pctransform(pointCloud(xyzPoints),tform);
+% figure;
+% pcshow(pcloud2);
+% xlabel("X");ylabel("Y");zlabel("Z");
+% zlim([0,30]);
+
+%% pitch
+p=deg2rad(-(90+pitch(1))); %-(90+pitch) if pitch is negative degrees
+tform= affine3d(axang2tform([1 0 0 p]));
+pcloud2 = pctransform(pointCloud(xyzPoints),tform); % magenta 1 green 2
+figure;
+pcshowpair(pointCloud(xyzPoints),pcloud2);
+xlabel("X East");ylabel("Y North");zlabel("Z down");
+zlim([-1,30]);
+
+%% heading
+head=deg2rad(-heading(1)); %-heading
+tform= affine3d(axang2tform([0 0 1 head]));
+pcloud3 = pctransform(pcloud2,tform); % magenta 1 green 2
+figure;
+pcshowpair(pcloud2,pcloud3);
+xlabel("X East");ylabel("Y North");zlabel("Z down");
+zlim([-1,30]);
+
+%% Scale point cloud using the total distances
+
+% in real life
+D=0;
+for i=2:size(camPoses,1)
+    d=sqrt( (cam_x(i)-cam_x(i-1))^2 + (cam_y(i)-cam_y(i-1))^2 + (cam_z(i)-cam_z(i-1))^2);
+    D=D+d;
+end
+disp(D);
+
+% in the cloud
+D_est=0;
+for i=2:size(camPoses,1) 
+    d=sqrt( (cams(i,1)-cams(i-1,1))^2 + (cams(i,2)-cams(i-1,2))^2 + (cams(i,3)-cams(i-1,3))^2);
+    D_est=D_est+d;
+end
+disp(D_est);
+s=D/D_est;
+disp(s);
+
+tform = affine3d([s 0 0 0; 0 s 0 0; 0 0 s 0; 0 0 0 1]);
+
+pcloud4=pctransform(pcloud3,tform);
+figure;pcshow(pcloud4);
+%% scale point cloud using the final distance
+
+%% Translate to the ground (subtract plane altitude)
+
+tform=affine3d([eye(3,4);[0 0 -934 1]]);
+pcloudf=pctransform(pcloud4,tform);
+figure;
+pcshow(pcloudf);
+xlabel("X East");ylabel("Y North");zlabel("Z down");
+
+%% compare the real and scaled trajectories
+scaled_cams=cams*s;
+scaled_cams(:,3)=-altitude;
+figure;
+plot3(cam_pos(:,1),cam_pos(:,2),cam_pos(:,3),'--ko');
+hold on;
+plot3(scaled_cams(:,1),scaled_cams(:,2),scaled_cams(:,3),'r--o');
+legend("Real positions","Estimated positions");
+xlabel("X East");ylabel("Y North");
+
+%% rotate scaled trajectory
+p=deg2rad(-70);
+R=axang2tform([1 0 0 p]); R=R(1:3,1:3);
+new_cams=R*scaled_cams(:,:)';
+new_cams=new
+figure; plot3(scaled_cams(:,1),scaled_cams(:,2),scaled_cams(:,3),'r--o');
+hold on; plot3(new_cams(:,1),new_cams(:,2),ne_cams(:,3),'r--o');
+%% register the recovered point cloud to the real one
+
+tform = pcregistericp(pointCloud(scaled_cams),pointCloud(cam_pos),'InitialTransform');
+registered_cams=pctransform(pointCloud(scaled_cams),tform);
+figure;
+plot3(cam_pos(:,1),cam_pos(:,2),cam_pos(:,3),'--ko');
+hold on;
+plot3(registered_cams.Location(:,1),registered_cams.Location(:,2),registered_cams.Location(:,3),'r--o');
+legend("Real positions","Estimated positions");
+xlabel("X East");ylabel("Y North");
