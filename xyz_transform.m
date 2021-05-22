@@ -25,7 +25,7 @@ tform= affine3d(axang2tform([1 0 0 p]));
 pcloud = pctransform(pointCloud(xyzPoints),tform); % magenta 1 green 2
 
 %% heading
-head=deg2rad(-heading(1)); %-heading
+head=deg2rad(-heading(1)-90); %-heading
 tform= affine3d(axang2tform([0 0 1 head]));
 pcloud = pctransform(pcloud,tform);
 
@@ -64,11 +64,12 @@ traj=[registered_cams.Location(:,1:2),-altitude];
 
 % Show result
 traj(:,1:2)=traj(:,1:2)-traj(1,1:2);
-figure;
-plot3(cam_pos(:,1),cam_pos(:,2),cam_pos(:,3),'--ko');
-hold on;
-plot3(traj(:,1),traj(:,2),traj(:,3),'r--o');
-legend("Real positions","Estimated positions");
-xlabel("X East");ylabel("Y North");
+
+% figure;
+% plot3(cam_pos(:,1),cam_pos(:,2),cam_pos(:,3),'--ko');
+% hold on;
+% plot3(traj(:,1),traj(:,2),traj(:,3),'r--o');
+% legend("Real positions","Estimated positions");
+% xlabel("X East");ylabel("Y North");
 
 end
