@@ -1,6 +1,6 @@
 %% load points and camera poses
 clear;
-load('pcloud_small');
+load('pcloud');
 %% plot "real" camera poses
 origin = [gps(1,1), gps(1,2), altitude(1)];
 [cam_x,cam_y] = latlon2local(gps(:,1),gps(:,2),altitude,origin);
@@ -91,7 +91,7 @@ xlabel("X East");ylabel("Y North");zlabel("Z down");
 % set(gca, 'ZDir','reverse');
 %% compare the real and scaled trajectories
 scaled_cams=cams*s;
-scaled_cams(:,3)=-altitude;
+%scaled_cams(:,3)=-altitude;
 figure;
 plot3(cam_pos(:,1),cam_pos(:,2),cam_pos(:,3),'--ko');
 hold on;
@@ -104,17 +104,60 @@ p=deg2rad(190);
 R=axang2tform([0 0 1 p]); R=R(1:3,1:3);
 new_cams=R*scaled_cams(:,:)';
 new_cams=new_cams';
+
 figure;plot3(cam_pos(:,1),cam_pos(:,2),cam_pos(:,3),'--ko');
 hold on; plot3(new_cams(:,1),new_cams(:,2),new_cams(:,3),'r--o');
 title("Real and transformed scaled trajs");
 xlabel("X East");ylabel("Y North"); zlabel('Z Down');
+
+a=deg2rad(180);
+R=axang2tform([1 0 0 a]); R=R(1:3,1:3);
+new_cams=R*new_cams(:,:)';
+new_cams=new_cams';
+
+figure;plot3(cam_pos(:,1),cam_pos(:,2),cam_pos(:,3),'--ko');
+hold on; plot3(new_cams(:,1),new_cams(:,2),new_cams(:,3),'r--o');
+title("Real and transformed scaled trajs");
+xlabel("X East");ylabel("Y North"); zlabel('Z Down');
+
 %% register the recovered point cloud to the real one
 
-[tform,registered_cams,rmse] = pcregistericp(pointCloud(scaled_cams),pointCloud(cam_pos),'InitialTransform',affine3d(axang2tform([0 0 1 deg2rad(190)])));
-%registered_cams=pctransform(pointCloud(scaled_cams),tform);
+
+[tform,registered_cams,rmse] = pcregistericp(pointCloud(new_cams), ... 
+    pointCloud(cam_pos));
+
+% [tform,registered_cams,rmse] = pcregistericp(pointCloud(scaled_cams), ... 
+%     pointCloud(cam_pos), ... 
+%     'InitialTransform',affine3d(axang2tform([0 0 1 deg2rad(190)])));
+
 figure;
 plot3(cam_pos(:,1),cam_pos(:,2),cam_pos(:,3),'--ko');
 hold on;
 plot3(registered_cams.Location(:,1),registered_cams.Location(:,2),registered_cams.Location(:,3),'r--o');
+legend("Real positions","Estimated positions");
+xlabel("X East");ylabel("Y North");
+
+% set the Z to altitude
+final_cams=[registered_cams.Location(:,1:2),-altitude];
+figure;
+plot3(cam_pos(:,1),cam_pos(:,2),cam_pos(:,3),'--ko');
+hold on;
+plot3(final_cams(:,1),final_cams(:,2),final_cams(:,3),'r--o');
+legend("Real positions","Estimated positions");
+xlabel("X East");ylabel("Y North");
+
+
+%% 2D ICP
+gps_traj=pointCloud([cam_pos(:,1:2) zeros(size(cam_pos,1),1)]);   
+est_traj=pointCloud([scaled_cams(:,1:2) zeros(size(cam_pos,1),1)]);
+
+%[tform,cams2d,rmse] = pcregistericp(est_traj,gps_traj,...
+    %'InitialTransform',affine3d(axang2tform([0 0 1 deg2rad(190)])));
+[tform,cams2d,rmse] = pcregistericp(est_traj,gps_traj);    
+%registered_cams=pctransform(pointCloud(scaled_cams),tform);
+figure;
+plot3(cam_pos(:,1),cam_pos(:,2),zeros(size(cam_pos,1),1),'--ko');
+hold on;
+plot3(cams2d.Location(:,1),cams2d.Location(:,2),cams2d.Location(:,3),'r--o');
 legend("Real positions","Estimated positions");
 xlabel("X East");ylabel("Y North");
