@@ -32,7 +32,7 @@ figure();
 surf(DEM_X,DEM_Y,small_A); hold on;
 
 % show points
-scatter3(p(:,1),p(:,2),p(:,3),0.1,'r*');hold on;
+scatter3(p(:,1),p(:,2),p(:,3),1,'ro');hold on;
 
 % show trajectory
 plot3(traj(:,1),traj(:,2),-traj(:,3),'go--');
