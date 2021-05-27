@@ -1,7 +1,7 @@
 %% Define problem
 clear;clc;close all;
 batch_size=5;
-dataset_name='B_1_2_33';
+dataset_name='A_0_1_58';
 motion_estimator="SURF";features_per_image = 1500;
 constructor="Eigen";
 SURF_octave_number=8;
@@ -48,9 +48,13 @@ for i=1:N
         dense_constructor(intrinsics,images(batch),constructor,vSet);
     % Transform point cloud to reference frame of first batch view
     [pcl,traj]=xyz_transform(xyzPoints,camPoses,gps(batch,:),altitude(batch),heading(batch),pitch(batch));
+    % remove outliers from local batch
+    [~,pcl,tracks,reprojectionErrors]=removeOutliers(... 
+    pcl,reprojectionErrors,reprojection_error_threshold,tracks); 
     % transform from first batch view to first image view
     [pcl,traj]=batch2global(... 
-        pcl,traj,gps(1,:),gps(ref,:),altitude(1),altitude(ref));
+        pointCloud(pcl),traj,gps(1,:),gps(ref,:),altitude(1),altitude(ref));
+    
     % Add points and trajectory to global points and trajectory
     XYZPOINTS=[XYZPOINTS;pcl.Location];
     TRAJ=[TRAJ;traj];
@@ -72,7 +76,7 @@ if exist('A','var') == 0
 end
 
 % show 3d results
-[~,~]=show3Dresults(A,R,XYZPOINTS,TRAJ,gps);
+[~,~]=show3Dresults(A,R,XYZPOINTS,TRAJ,gps,heading,pitch);
 
 % show East distribution
 figure; histogram(XYZPOINTS(:,1));

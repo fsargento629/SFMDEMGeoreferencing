@@ -3,8 +3,8 @@ function [vSet] = motion_estimation(intrinsics,images,detector,features_per_imag
 %   Detailed explanation goes here
 
 
-I =images{1};
-
+%I =images{1};
+I=undistortImage(images{1},intrinsics);
 % Detect features
 if detector=="SURF"
     border = 50;
@@ -29,8 +29,8 @@ vSet = addView(vSet, viewId, rigid3d, 'Points', prevPoints);
 
 for i = 2:numel(images)
     % Select image
-    I=images{i};
-    
+    %I=images{i};
+    I=undistortImage(images{i},intrinsics);
     % Detect features
     if detector=="SURF"
         currPoints   = detectSURFFeatures(I, 'NumOctaves', 8, 'ROI', roi);

@@ -3,12 +3,20 @@ function [xyzPoints, camPoses, reprojectionErrors,tracks] = dense_constructor(in
 %   Detailed explanation goes here
 
 % Read the first image
-I = images{1};
-
+%I = images{1};
+I=undistortImage(images{1},intrinsics);
 % Detect corners in the first image.
-prevPoints = detectMinEigenFeatures(I, 'MinQuality', 0.001);
+if constructor=="Eigen"
+    prevPoints = detectMinEigenFeatures(I, 'MinQuality', 0.001);
+elseif constructor=="KAZE"
+        prevPoints = detectKAZEFeatures(I);
+elseif constructor=="ORB"
+        prevPoints = detectORBFeatures(I);
+elseif constructor=="SURF"
+        prevPoints = detectSURFFeatures(I);
+end
 
-% Create the point tracker object to track the points across views.
+% Create th e point tracker object to track the points across views.
 tracker = vision.PointTracker('MaxBidirectionalError', 1, 'NumPyramidLevels', 6);
 
 % Initialize the point tracker.
@@ -23,8 +31,8 @@ vSet = updateView(vSet, 1, 'Points', prevPoints);
 % Track the points across all views.
 for i = 2:numel(images)
     % Read and undistort the current image.
-    I=images{i}; 
-    
+    %I=images{i}; 
+    I=undistortImage(images{i},intrinsics);
     % Track the points.
     [currPoints, validIdx] = step(tracker, I);
     

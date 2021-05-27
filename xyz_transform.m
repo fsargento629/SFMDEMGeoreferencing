@@ -14,25 +14,23 @@ cam_z=-altitude;
 cam_pos=[cam_x cam_y cam_z];
 
 %% Compute the estimated trajectory
-cams=zeros(size(camPoses,1),3);
-for i=1:size(camPoses,1)
-    cams(i,:)=camPoses.AbsolutePose(i).Translation;
-end
-
+cams=getEstimatedTraj(camPoses);
 %% pitch
-p=deg2rad(-(90+pitch(2)+180)); %-(90+pitch+180) if pitch is negative degrees
+corrector=0;%corrector=8;
+p=deg2rad(-(90+pitch(2)+180-corrector)); %-(90+pitch+180) if pitch is negative degrees
 tform= affine3d(axang2tform([1 0 0 p]));
 pcloud = pctransform(pointCloud(xyzPoints),tform); % magenta 1 green 2
 
 %% heading
-head=deg2rad(-heading(1)-90); %-heading
+head=deg2rad(heading(1)); %heading
 tform= affine3d(axang2tform([0 0 1 head]));
 pcloud = pctransform(pcloud,tform);
 
 %% Scale point cloud
-D=sqrt(cam_x(end)^2+cam_y(end)^2+(cam_z(end)-cam_z(1))^2);
-D_est=sqrt(cams(end,1)^2 + cams(end,2)^2 + cams(end,3)^2);
-s=D/D_est;
+% D=sqrt(cam_x(end)^2+cam_y(end)^2+(cam_z(end)-cam_z(1))^2);
+% D_est=sqrt(cams(end,1)^2 + cams(end,2)^2 + cams(end,3)^2);
+% s=D/D_est;
+s=getScaleFactor(cam_pos,cams);
 tform = affine3d([s 0 0 0; 0 s 0 0; 0 0 s 0; 0 0 0 1]);
 pcloud=pctransform(pcloud,tform);
 
@@ -61,9 +59,9 @@ traj=R*traj(:,:)'; traj=traj';
 [tform,registered_cams,rmse] = pcregistericp(pointCloud(traj), ... 
     pointCloud(cam_pos));
 traj=[registered_cams.Location(:,1:2),-altitude];
-
-% Show result
 traj(:,1:2)=traj(:,1:2)-traj(1,1:2);
+% Show result
+
 
 % figure;
 % plot3(cam_pos(:,1),cam_pos(:,2),cam_pos(:,3),'--ko');

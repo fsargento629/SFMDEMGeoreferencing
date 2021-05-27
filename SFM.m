@@ -1,34 +1,24 @@
 %% Define problem
 clear;clc;close all;
-dataset_name='B_1_2_33';
 motion_estimator="SURF";features_per_image = 1500;
-constructor="Eigen";
+constructor="ORB";
 SURF_octave_number=8;
-Upright_matching= true;
-error_on_off=true;
-reprojection_error_threshold=5;
-save_results=false;
-see_matches=false;
+%Upright_matching= true;
+%error_on_off=true;
+reprojection_error_threshold=1;
+%save_results=false;
+%see_matches=false;
 
-%% Load and show images
-imageDir = strcat('Datasets/',dataset_name);
-imds = imageDatastore(imageDir);
+dataset='A';
+t0=20;step=2;tf=30;
 
-% Display the images.
-figure;
-montage(imds.Files, 'Size', [3, 2]);
-
-% Convert the images to grayscale.
-images = cell(1, numel(imds.Files));
-for i = 1:numel(imds.Files)
-    I = readimage(imds, i);
-    images{i} = rgb2gray(I);
-end
-I=images{1};
-title('Input Image Sequence');
-%% Load intrinsics and extrinsics
+[images,color_images,samples]=initSFM(dataset,t0,step,tf);
 load('intrinsics/intrinsics');
-load(strcat('Datasets/',dataset_name,'/extrinsics'));
+load(strcat('Datasets/',dataset,'/extrinsics'));
+% filter extrinsics
+gps=gps(samples,:); altitude=altitude(samples);
+speed=speed(samples); heading=heading(samples); pitch=pitch(samples);
+
 %% SFM
 tic;
 % camera motion estimation
@@ -38,19 +28,21 @@ tic;
     dense_constructor(intrinsics,images,constructor,vSet);
 % Point cloud transform
 [pcl,traj]=xyz_transform(xyzPoints,camPoses,gps,altitude,heading,pitch);
+%remove outliers
+[idx,p,tracks,reprojectionErrors]=removeOutliers(... 
+    pcl,reprojectionErrors,reprojection_error_threshold,tracks); 
+% get color information for each point\
+color=getColor(tracks,color_images,size(p,1)); 
 toc;
 
 %% Show resuts dense reconstruction results
 % load DEM 
 if exist('A','var') == 0
-    load("DEMs/portugal_DEM");
-    load coastlines;
+    load("DEMs/portugal_DEM"); 
 end
 
 % show 3d results
-p=pcl.Location;
-p=p(abs(p(:,3))<500,:);
-[~,~]=show3Dresults(A,R,p,traj,gps);
+[~,~]=show3Dresults(A,R,p,traj,gps,heading,pitch);
 
 % show East distribution
 figure; histogram(p(:,1));
@@ -73,8 +65,29 @@ figure; histfit(p(:,3));
 title("Terrain height histogram"); 
 ylabel("Number of points");xlabel("Terrain height [m]");
 
-% show distance histogram (2D distance from (0,0)
+% show error with point distance
 D_2=sqrt(p(:,1).^2 + p(:,2).^2);
+figure;scatter(D_2,reprojectionErrors);
+title("Reprojection Error with distance");
+xlabel("2D Distance [m]"); ylabel("Reprojection error [pixels]");
+
+% show boxplot of error for each distance class
+% x1->600-800 m
+% x2-> 800-1000 m ,
+% x3-> 1000-1200 m
+x1=reprojectionErrors(D_2<800 & D_2>600);
+x2=reprojectionErrors(D_2<1000 & D_2>800);
+x3=reprojectionErrors(D_2<1200 & D_2>1000);
+x=[x1;x2;x3];
+g1 = repmat({'600-800 m'},size(x1,1),1);
+g2 = repmat({'800-1000 m'},size(x2,1),1);
+g3 = repmat({'1000-1200 m'},size(x3,1),1);
+g = [g1; g2; g3];
+figure; boxplot(x,g);
+title("Reprojection error for 2D distances");
+xlabel("Distance from first view");
+ylabel("Reprojection error [px]");
+% show distance histogram (2D distance from (0,0)
 figure; histogram(D_2);
 title("2D distance histogram"); 
 ylabel("Number of points");xlabel("2D Distance from aircraft [m]");
