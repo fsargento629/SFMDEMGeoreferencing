@@ -16,7 +16,7 @@ end
 
 % Extract features. Using 'Upright' features improves matching, as long as
 % the camera motion involves little or no in-plane rotation.
-prevFeatures = extractFeatures(I, prevPoints, 'Upright', true);
+prevFeatures = extractFeatures(I, prevPoints);
 
 % Create an empty imageviewset object to manage the data associated with each
 % view.
@@ -41,9 +41,8 @@ for i = 2:numel(images)
     
    
     % extract and match features.
-    currFeatures = extractFeatures(I, currPoints, 'Upright', true);
-    indexPairs   = matchFeatures(prevFeatures, currFeatures, ...
-        'MaxRatio', .7, 'Unique',  true);
+    currFeatures = extractFeatures(I, currPoints);
+    indexPairs   = matchFeatures(prevFeatures, currFeatures);
     
     % Select only matched points.
     matchedPoints1 = prevPoints(indexPairs(:, 1));

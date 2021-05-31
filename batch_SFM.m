@@ -1,7 +1,6 @@
 %% Define problem
 clear;clc;close all;
-batch_size=5;
-dataset_name='A_0_1_58';
+
 motion_estimator="SURF";features_per_image = 1500;
 constructor="Eigen";
 SURF_octave_number=8;
@@ -10,21 +9,17 @@ error_on_off=true;
 reprojection_error_threshold=2;
 save_results=false;
 see_matches=false;
-%% Load  images
-imageDir = strcat('Datasets/',dataset_name);
-imds = imageDatastore(imageDir);
 
-
-% Convert the images to grayscale.
-images = cell(1, numel(imds.Files));
-for i = 1:numel(imds.Files)
-    I = readimage(imds, i);
-    images{i} = rgb2gray(I);
-end
-I=images{1};
-%% Load intrinsics and extrinsics
+dataset='A';
+t0=0;step=2;tf=30;
+batch_size=5;
+[images,color_images,samples]=initSFM(dataset,t0,step,tf);
 load('intrinsics/intrinsics');
-load(strcat('Datasets/',dataset_name,'/extrinsics'));
+load(strcat('Datasets/',dataset,'/extrinsics'));
+% filter extrinsics
+gps=gps(samples,:); altitude=altitude(samples);
+speed=speed(samples); heading=heading(samples); pitch=pitch(samples);
+
 
 %% loop for each batch
 tic;
