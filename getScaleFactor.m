@@ -9,12 +9,13 @@ if metric=="distanceRatio"
     s=mean(D./d);
     
 elseif metric=="meanHeight"
-    Z=240;%metres
+    % A-> 210m
+    Z=210;%metres
     z=mean(pcloud.Location(:,3));
     s= (Z+traj(1,3))/z;
     
 elseif metric=="medianHeight"
-    Z=240;%metres
+    Z=200;%metres (A)
     z=median(pcloud.Location(:,3));
     s= (Z+traj(1,3))/z;
 end

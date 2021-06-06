@@ -12,6 +12,8 @@ if detector=="SURF"
     prevPoints   = detectSURFFeatures(I, 'NumOctaves', 8, 'ROI', roi);
 elseif detector=="KAZE"
         prevPoints   = selectStrongest(detectKAZEFeatures(I),features_per_image);
+elseif detector=="ORB"
+        prevPoints   = selectStrongest(detectORBFeatures(I),features_per_image);
 end
 
 % Extract features. Using 'Upright' features improves matching, as long as
@@ -37,6 +39,8 @@ for i = 2:numel(images)
         
     elseif detector=="KAZE"
         currPoints   = selectStrongest(detectKAZEFeatures(I),features_per_image);
+    elseif detector=="ORB"
+        currPoints   = selectStrongest(detectORBFeatures(I),features_per_image);
     end
     
    

@@ -1,7 +1,7 @@
 %% Define problem
 clear;clc;close all;
 motion_estimator="KAZE";features_per_image = 200;
-constructor="Eigen";
+constructor="KAZE";
 SURF_octave_number=8;
 %Upright_matching= true;
 %error_on_off=true;
@@ -10,7 +10,10 @@ reprojection_error_threshold=1;
 %see_matches=false;
 show_transform=false;
 dataset='A';
-t0=0;step=2;tf=42;
+t0=12;step=2;tf=30;
+
+% dataset='A';
+% t0=0;step=1;tf=10;
 
 [images,color_images,samples]=initSFM(dataset,t0,step,tf);
 load('intrinsics/intrinsics');
@@ -121,12 +124,13 @@ xlabel("X East [m]");ylabel("Y North [m]"); zlabel("Z altitude [m]");
 
 % estimated relative orientations
 a=camPoses2world(vSet);
-showOrientation(a);
+compareAngles(a,heading,pitch);
+%showOrientation(a);
 
 % measured orinetations
 % heading
-figure; plot(heading);title("Real heading in degrees");
-figure; plot(pitch);title("Real pitch in degrees");
+% figure; plot(heading);title("Real heading in degrees");
+% figure; plot(pitch);title("Real pitch in degrees");
 
 %% Perform IDW
 [X,Y,Z,p_filtered]=inverseDistanceWeighting(p);

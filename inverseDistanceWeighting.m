@@ -1,11 +1,11 @@
 function [X,Y,Z,p] = inverseDistanceWeighting(points)
 %INVERSEDISTANCEWEIGHTING Summary of this function goes here
 %   Detailed explanation goes here
-res=15;
+res=30;
 %% segment point cloud
 %p=points(points(:,3)<380,:);p=p(p(:,3)>260,:);
 p=points;
-p=p(p(:,3)<280 & p(:,3)>180,:);
+p=p(p(:,3)<260 & p(:,3)>180,:);
 %% define window
 xwindow=[round(min(p(:,1))), round(max(p(:,1)))];
 ywindow=[round(min(p(:,2))), round(max(p(:,2)))];
@@ -15,7 +15,7 @@ L=size(Y,2); % L SOUTH-NORTH
 C=size(X,2); % C WEST-EAST
 %% perform IDW
 tic;
-pw=4; % weight power
+pw=2; % weight power
 N=size(p,1);
 Z=zeros(L,C);
 D=zeros(N,1);
@@ -28,7 +28,7 @@ for l=1:L
         for i=1:N
             D(i)=norm(p(i,1:2)-P);
         end
-        mask= D<50;
+        mask= D<400;
         W = 1./(D(mask).^pw);
         Z(l,c)=sum(W.*p(mask,3))/sum(W);
         %disp([l,c]);
@@ -37,6 +37,31 @@ for l=1:L
 end
 close(h);
 toc;
+
+
+%% remove disconnected lines
+% trim Z from the left
+for c=round(size(Z,2)/2):-1:1
+    a=isnan(Z(:,c));
+    if sum(~a)==0
+        Z=Z(:,c+1:end);
+        X=X(:,c+1:end);  
+        break;
+    end
+end
+% trim Z from the middle to the right
+for c=round(size(Z,2)/2):size(Z,2)
+    a=isnan(Z(:,c));
+    if sum(~a)==0
+        Z=Z(:,1:c-1);
+        X=X(:,1:c-1);
+        break;
+    end
+end
+
+
+
+
 % plot only height map
 figure();
 surf(Z);

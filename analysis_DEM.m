@@ -17,8 +17,12 @@ load coastlines;
 %LON=-8.54395;
 
 %% moinhos
-LAT=39.0342981;
-LON=-9.2182466;
+% LAT=39.0342981;
+% LON=-9.2182466;
+
+%% torres
+LAT=39.029006;
+LON=-9.222142;
 
 %% Determine the height of the point and show it in 2D and 3D
 % Determine height for a point
@@ -39,7 +43,7 @@ hold on;
 geoshow(LAT, LON, 'DisplayType', 'Point', 'Marker', '+', 'Color', 'red');
 
 % make X and Y vectors for scale 
-window=120;%in cells
+window=60;%in cells
 small_A=A(A_lat-window:A_lat+window,A_lon-window:A_lon+window);
 res=30;
 DEM_X=res*size(small_A,1)/-2:res:res*size(small_A,1)/2; DEM_X=DEM_X(1:size(small_A,1));
@@ -53,5 +57,5 @@ xlabel('X (m)');
 ylabel('Y (m)');
 zlabel('Z (m)');
 %% save croped DEM as a matrix
-str=strcat(int2str(LAT*1e4),'_',int2str(LON*1e4),'.mat');
-save(str,'small_A');
+% str=strcat(int2str(LAT*1e4),'_',int2str(LON*1e4),'.mat');
+% save(str,'small_A');
