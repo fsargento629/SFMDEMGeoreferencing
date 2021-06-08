@@ -1,17 +1,21 @@
-function [p_icp,tform,rmse] = ICP(gps,X,Y,Z,p,show)
+function [p_icp,tform,rmse] = ICP(origin,pos,X,Y,Z,p,show)
 %ICP Perform ICP on REM and transform p
 load("DEMs/portugal_DEM"); 
-LAT=gps(1,1); LON=gps(1,2);
+% get the cell for the origin
+LAT=origin(1,1); LON=origin(1,2);
 A_lat= floor((R.LatitudeLimits(2)-LAT)/R.CellExtentInLatitude);
 A_lon= floor((LON-R.LongitudeLimits(1))/R.CellExtentInLongitude);
 
-
+% add camera position to find the A-lat and A-lon
+A_lon=A_lon+round(pos(1,1)/30);
+A_lat=A_lat-round(pos(1,2)/30);
+% build suport x and y vectors
 x0=floor(X(1)/30); xf=floor(X(end)/30);
 y0=floor(Y(1)/30); yf=floor (Y(end)/30);
 
-DEM_X=X(1):30:X(end);
-DEM_Y=Y(1):30:Y(end);
-DEM_Z=A(A_lon+y0:A_lon+yf,A_lat+x0:A_lat+xf);
+DEM_X=X(1):30:X(end); % West to East
+DEM_Y=Y(end):-30:Y(1); % North to South
+DEM_Z=A(A_lat-yf:A_lat-y0,A_lon+x0:A_lon+xf);
 
 % Create moving pcl
 L=size(Z,1);

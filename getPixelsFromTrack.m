@@ -10,6 +10,8 @@ end
 mask=px(:,1)~=0;
 px=px(mask,:);
 small_tracks=tracks(mask);
-small_p=p(mask,:);
+if p~=0
+    small_p=p(mask,:);
+end
 end
 

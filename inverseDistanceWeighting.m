@@ -3,9 +3,9 @@ function [X,Y,Z,p] = inverseDistanceWeighting(points)
 %   Detailed explanation goes here
 res=30;
 %% segment point cloud
-%p=points(points(:,3)<380,:);p=p(p(:,3)>260,:);
+
 p=points;
-p=p(p(:,3)<260 & p(:,3)>180,:);
+%p=points(points(:,3)<400,:);p=p(p(:,3)>0,:);
 %% define window
 xwindow=[round(min(p(:,1))), round(max(p(:,1)))];
 ywindow=[round(min(p(:,2))), round(max(p(:,2)))];
@@ -28,7 +28,7 @@ for l=1:L
         for i=1:N
             D(i)=norm(p(i,1:2)-P);
         end
-        mask= D<400;
+        mask= D<100;
         W = 1./(D(mask).^pw);
         Z(l,c)=sum(W.*p(mask,3))/sum(W);
         %disp([l,c]);

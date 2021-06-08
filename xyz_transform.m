@@ -16,8 +16,8 @@ cam_pos=[cam_x cam_y cam_z];
 %% Compute the estimated trajectory
 cams=getEstimatedTraj(camPoses);
 %% pitch
-corrector=7; % for dataset A
-%corrector=?; %dataset B
+%corrector=7; % for dataset A
+corrector=5; %dataset B
 p=deg2rad(-(90+pitch(2)+180-corrector)); %-(90+pitch+180) if pitch is negative degrees
 tform= affine3d(axang2tform([1 0 0 p]));
 pcloud = pctransform(pointCloud(xyzPoints),tform); % magenta 1 green 2
@@ -31,7 +31,7 @@ pcloud = pctransform(pcloud,tform);
 % D=sqrt(cam_x(end)^2+cam_y(end)^2+(cam_z(end)-cam_z(1))^2);
 % D_est=sqrt(cams(end,1)^2 + cams(end,2)^2 + cams(end,3)^2);
 % s=D/D_est;
-s=getScaleFactor(cam_pos,cams,pcloud,"medianHeight");
+s=getScaleFactor(cam_pos,cams,pcloud,"distanceRatio");
 tform = affine3d([s 0 0 0; 0 s 0 0; 0 0 s 0; 0 0 0 1]);
 pcloud=pctransform(pcloud,tform);
 %% Sum UAV altitude to the scaled point cloud 

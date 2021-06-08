@@ -55,12 +55,16 @@ tracks = findTracks(vSet);
 camPoses = poses(vSet);
 
 % Triangulate initial locations for the 3-D world points.
-xyzPoints = triangulateMultiview(tracks, camPoses,...
+[xyzPoints,reprojectionErrors] = triangulateMultiview(tracks, camPoses,...
     intrinsics);
+mask=reprojectionErrors<5;
+xyzPoints=xyzPoints(mask,:);
+tracks=tracks(mask);
 
 % Refine the 3-D world points and camera poses.
 [xyzPoints, camPoses, reprojectionErrors] = bundleAdjustment(...
    xyzPoints, tracks, camPoses, intrinsics, 'FixedViewId', 1);
+
 
 end
 

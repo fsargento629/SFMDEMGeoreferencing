@@ -1,7 +1,7 @@
 %% Define problem
 clear;clc;close all;
 motion_estimator="KAZE";features_per_image = 200;
-constructor="KAZE";
+constructor="Eigen";
 SURF_octave_number=8;
 %Upright_matching= true;
 %error_on_off=true;
@@ -9,8 +9,8 @@ reprojection_error_threshold=1;
 %save_results=false;
 %see_matches=false;
 show_transform=false;
-dataset='A';
-t0=12;step=2;tf=30;
+dataset='B';
+t0=0;step=2;tf=10;
 
 % dataset='A';
 % t0=0;step=1;tf=10;
@@ -41,7 +41,7 @@ tic;
 [idx,p,tracks,reprojectionErrors]=removeOutliers(... 
     pcl,reprojectionErrors,reprojection_error_threshold,tracks); 
 toc;
-% get color information for each point\
+% get color information for each point
 color=getColor(tracks,color_images,size(p,1)); 
 
 
@@ -51,11 +51,11 @@ color=getColor(tracks,color_images,size(p,1));
 %     load("DEMs/portugal_DEM"); 
 % end
 % 
-% % show 3d results
+%% show 3d results
 % [~,~]=show3Dresults(A,R,p,traj,gps,heading,pitch);
 
 [~,~]=show3Dresults(0,0,p,traj,gps,heading,pitch);
-
+%% Show graphs
 % show East distribution
 figure; histogram(p(:,1));
 title("East coordinate histogram"); 
@@ -136,7 +136,7 @@ compareAngles(a,heading,pitch);
 [X,Y,Z,p_filtered]=inverseDistanceWeighting(p);
 
 figure;surf(X,Y,Z);hold on;
-scatter3(p_filtered(:,1),p_filtered(:,2),p_filtered(:,3),'r');
+scatter3(p_filtered(:,1),p_filtered(:,2),p_filtered(:,3),10,'r');
 xlabel('X East (m)');ylabel('Y North (m)');zlabel('Z Elevation  (m)');
 title("Recovered DEM and recovered feature points");
 legend("Recovered DEM","Recovered feature points");
