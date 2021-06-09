@@ -10,9 +10,9 @@ inliers=p(:,3)<800;
 idx=p(:,3)>-1000;
 inliers=inliers.*idx;
 
-% remove points that are too distant (>1500 m)
+% remove points that are too distant (>3000 m)
 D_2=sqrt(p(:,1).^2 + p(:,2).^2);
-idx=D_2(:)<1500;
+idx=D_2(:)<3000;
 inliers=inliers.*idx;
 
 % remove points if their error is above the threshold
