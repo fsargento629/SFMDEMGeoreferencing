@@ -1,4 +1,5 @@
-function [pcloud,t] = blender_xyz_transform(xyzPoints,camPoses,abspos,heading,pitch,show)
+function [pcloud,t] = blender_xyz_transform(... 
+    xyzPoints,camPoses,abspos,heading,pitch)
 %blender_xyz_transform Transform a point cloud and a trajectory into
 % world coordinates
 
@@ -28,6 +29,7 @@ t=transformPointsForward(tform,t);
 tform=affine3d([eye(3,4);[0 0 ttrue(1,3) 1]]);
 pcloud=pctransform(pcloud,tform);
 t=transformPointsForward(tform,t);
+
 
 
 end

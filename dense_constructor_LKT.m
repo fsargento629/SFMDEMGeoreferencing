@@ -27,14 +27,7 @@ for i = 2:numel(images)
     I=undistortImage(images{i},intrinsics);
     % Track the points.
     [currPoints, validIdx] = step(tracker, I);
-    % check if point  tracker has lost track of too many points
-    % if so, reinitialize it
-    if sum(validIdx)/numel(validIdx) < .93
-        points=extractPoints(I,constructor);
-        points=points.Location;
-        setPoints(tracker,points);
-    end
-    
+       
     
     % Clear the old matches between the points.
     if i < numel(images)

@@ -10,9 +10,9 @@ inliers=p(:,3)<800;
 idx=p(:,3)>-1000;
 inliers=inliers.*idx;
 
-% remove points that are too distant (>3000 m)
+% remove points that are too distant (>5000 m)
 D_2=sqrt(p(:,1).^2 + p(:,2).^2);
-idx=D_2(:)<3000;
+idx=D_2(:)<5000;
 inliers=inliers.*idx;
 
 % remove points if their error is above the threshold
@@ -30,17 +30,17 @@ p=p(inliers,:);
 tracks=t(inliers);
 reprojectionErrors=error(inliers);
 
-% remove the 1% highest points
-[~,idx]=maxk(p(:,3),round(size(p,1)*0.01));
-p(idx,:)=[];
-tracks(idx)=[];
-reprojectionErrors(idx)=[];
-
-% remove the 1% lowest points
-[~,idx]=mink(p(:,3),round(size(p,1)*0.01));
-p(idx,:)=[];
-tracks(idx)=[];
-reprojectionErrors(idx)=[];
+% % remove the 1% highest points
+% [~,idx]=maxk(p(:,3),round(size(p,1)*0.01));
+% p(idx,:)=[];
+% tracks(idx)=[];
+% reprojectionErrors(idx)=[];
+% 
+% % remove the 1% lowest points
+% [~,idx]=mink(p(:,3),round(size(p,1)*0.01));
+% p(idx,:)=[];
+% tracks(idx)=[];
+% reprojectionErrors(idx)=[];
 
 % finally, use pcdenoise to filter
 [p,inliers]=pcdenoise(pointCloud(p),'NumNeighbors',7);
