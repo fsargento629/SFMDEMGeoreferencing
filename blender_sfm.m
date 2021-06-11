@@ -1,9 +1,9 @@
 %% Algorithm definitions
 clear;clc;
 reprojection_error_threshold=5;
-dataset="archeira/T3";
+dataset="archeira/T1";
 detector="SURF";
-constructor="Eigen";
+constructor="Eigen001";
 %% load images
 close all;
 imageDir=strcat('Datasets/Blender datasets/',dataset);
@@ -36,17 +36,18 @@ toc;
 %% dense reconstruction
 tic;
 [xyzPoints, camPoses, reprojectionErrors,tracks]= ... 
-    dense_constructor(intrinsics,images,constructor,vSet);
+    dense_constructor_LKT(intrinsics,images,constructor,vSet);
 toc;
 
 %% get extrinsics and transform pcl using it
 load(strcat("Datasets/Blender datasets/",dataset,"/extrinsics"));
-%abspos(:,1:2)=cosd(origin(1))*abspos(:,1:2); % mercator correction
+
 % Point cloud transform
 tic;
 [pcl,traj]=blender_xyz_transform(xyzPoints,... 
     camPoses,abspos,heading,pitch,false);
 toc;
+ang=getAngles(vSet,heading,pitch);
 %% remove outliers
 tic;
 [idx,p,tracks,reprojectionErrors]=removeOutliers(... 

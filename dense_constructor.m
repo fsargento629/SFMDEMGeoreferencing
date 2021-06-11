@@ -1,40 +1,34 @@
 function [xyzPoints, camPoses, reprojectionErrors,tracks] = dense_constructor(intrinsics,images,constructor,vSet)
-%DENSE_CONSTRUCTOR extract points and construct a large dense pointcloud
-%   Detailed explanation goes here
+%dense_constructor extract points and build a large poinc cloud using
+% regular features
+
 
 % Read the first image
 %I = images{1};
 I=undistortImage(images{1},intrinsics);
-% Detect corners in the first image.
-if constructor=="Eigen"
-    prevPoints = detectMinEigenFeatures(I, 'MinQuality', 0.001);
-elseif constructor=="KAZE"
-        prevPoints = detectKAZEFeatures(I);
-elseif constructor=="ORB"
-        prevPoints = detectORBFeatures(I);
-elseif constructor=="SURF"
-        prevPoints = detectSURFFeatures(I);
-end
+% Detect features in the first image.
+prevPoints=extractPoints(I,constructor);
+[prevFeatures,vpts1] = extractFeatures(I, prevPoints);
 
-% Create th e point tracker object to track the points across views.
-tracker = vision.PointTracker('MaxBidirectionalError', 1, 'NumPyramidLevels', 6);
 
-% Initialize the point tracker.
-prevPoints = prevPoints.Location;
-initialize(tracker, prevPoints, I);
-
-% Store the dense points in the view set.
-
+% update the vSet
 vSet = updateConnection(vSet, 1, 2, 'Matches', zeros(0, 2));
 vSet = updateView(vSet, 1, 'Points', prevPoints);
 
-% Track the points across all views.
+
+%% SFM loop
 for i = 2:numel(images)
-    % Read and undistort the current image.
-    %I=images{i}; 
+    % get new image
     I=undistortImage(images{i},intrinsics);
-    % Track the points.
-    [currPoints, validIdx] = step(tracker, I);
+    
+    % get matched points in the new image
+    currPoints=extractPoints(I,constructor);
+    [currFeatures,vpts2] = extractFeatures(I, currPoints);
+    indexPairs   = matchFeatures(prevFeatures,  ...
+        currFeatures);
+    % Select matched points.
+    matchedPoints1 = vpts1(indexPairs(:, 1));
+    matchedPoints2 = vpts2(indexPairs(:, 2));
     
     % Clear the old matches between the points.
     if i < numel(images)
@@ -42,10 +36,14 @@ for i = 2:numel(images)
     end
     vSet = updateView(vSet, i, 'Points', currPoints);
     
-    % Store the point matches in the view set.
-    matches = repmat((1:size(prevPoints, 1))', [1, 2]);
-    matches = matches(validIdx, :);        
-    vSet = updateConnection(vSet, i-1, i, 'Matches', matches);
+    % Store the point matches between the previous and the current views.
+    vSet = updateConnection(vSet, i-1, i, 'Matches', indexPairs(:,:));
+    
+    % store the values extracted this loop
+    prevFeatures = currFeatures;
+    prevPoints   = currPoints;
+    vpts1=vpts2;
+    
 end
 
 % Find point tracks across all views.
@@ -63,8 +61,7 @@ tracks=tracks(mask);
 
 % Refine the 3-D world points and camera poses.
 [xyzPoints, camPoses, reprojectionErrors] = bundleAdjustment(...
-   xyzPoints, tracks, camPoses, intrinsics, 'FixedViewId', 1);
-
+    xyzPoints, tracks, camPoses, intrinsics, 'FixedViewId', 1);
 
 end
 
