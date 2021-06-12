@@ -20,6 +20,6 @@ elseif metric=="medianHeight"
     s= (Z+traj(1,3))/z;
 end
 
-fprintf("Scale factor: %d\n",s);
+fprintf("Scale factor: %f\n",s);
 end
 

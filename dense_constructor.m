@@ -25,7 +25,7 @@ for i = 2:numel(images)
     currPoints=extractPoints(I,constructor);
     [currFeatures,vpts2] = extractFeatures(I, currPoints);
     indexPairs   = matchFeatures(prevFeatures,  ...
-        currFeatures);
+        currFeatures,'MaxRatio',0.9);
     % Select matched points.
     matchedPoints1 = vpts1(indexPairs(:, 1));
     matchedPoints2 = vpts2(indexPairs(:, 2));
@@ -55,7 +55,7 @@ camPoses = poses(vSet);
 % Triangulate initial locations for the 3-D world points.
 [xyzPoints,reprojectionErrors] = triangulateMultiview(tracks, camPoses,...
     intrinsics);
-mask=reprojectionErrors<5;
+mask=reprojectionErrors<15;
 xyzPoints=xyzPoints(mask,:);
 tracks=tracks(mask);
 

@@ -1,5 +1,5 @@
 function [pcloud,t] = blender_xyz_transform(... 
-    xyzPoints,camPoses,abspos,heading,pitch)
+    xyzPoints,camPoses,abspos,heading,pitch,input_s)
 %blender_xyz_transform Transform a point cloud and a trajectory into
 % world coordinates
 
@@ -21,7 +21,12 @@ tform= affine3d(axang2tform([0 0 1 head]));
 pcloud = pctransform(pcloud,tform);
 t=transformPointsForward(tform,t);
 %% Scale point cloud and trajectory
-s=getScaleFactor(ttrue,t,pcloud,"distanceRatio");
+if input_s==0
+    s=getScaleFactor(ttrue,t,pcloud,"distanceRatio");
+else
+    s=input_s;
+end
+
 tform = affine3d([s 0 0 0; 0 s 0 0; 0 0 s 0; 0 0 0 1]);
 pcloud=pctransform(pcloud,tform);
 t=transformPointsForward(tform,t);

@@ -5,7 +5,7 @@ dataset="archeira/T4";
 detector="SURF";
 MAX_features=200;
 constructor="Eigen001";
-batch_size=6;
+batch_size=15;
 %% load image directory
 close all;
 imageDir=strcat('Datasets/Blender datasets/',dataset);
@@ -23,12 +23,22 @@ load("intrinsics/blender_intrinsics");
 
 %% load extrinsics
 load(strcat("Datasets/Blender datasets/",dataset,"/extrinsics"));
+%% get the scale factor
+[images,~]=getImages(imds,1:numel(imds.Files));
+[vSet_total]=motion_estimation(intrinsics,images,detector,200);
+ttrue=abspos;
+ttrue(:,1:2)=ttrue(:,1:2)-ttrue(1,1:2);
+traj_total=getEstimatedTraj(vSet_total.poses);
+scale=getScaleFactor(ttrue,traj_total,0,"distanceRatio");
+
+
 %% batch SFM
 % initialization
-Points=[];TRACKS=[];ERRORS=[]; COLOR=[]; 
+tic;
+P=[];TRACKS=[];ERRORS=[]; COLOR=[]; 
 TRAJ=[];
 batch_num=floor(numel(imds.Files)/batch_size);
-
+sizes=zeros(batch_num,1);
 
 % loop to do local SFM
 % 1) Do motion estimation for batch
@@ -37,44 +47,33 @@ batch_num=floor(numel(imds.Files)/batch_size);
 % 4) Remove outliers
 % 5) Get color information
 % 6) Merge new results to the old
-for i=1:batch_num
-    tic;
-    % 0) select samples and images to use
-    if i<batch_num
-        samples= 1+(i-1)*batch_size:i*batch_size;
-    else
-        samples=1+(i-1)*batch_size:numel(imds.Files);
-    end
-    [images,color_images]=getImages(imds,samples);
-    % 1) motion estimation
-    [vSet]=motion_estimation(intrinsics,images,detector,MAX_features);
-    fprintf("Motion estimation done\n");
-    % 2) dense reconstruction
-    [xyzPoints, camPoses, reprojectionErrors,tracks]= ... 
-    dense_constructor_LKT(intrinsics,images,constructor,vSet);
-    fprintf("Dense reconstruction done\n");
-    % 3) Coordinate transformation
-    [p,traj]=blender_xyz_transform(xyzPoints,... 
-    camPoses,abspos(samples,:),heading(samples),pitch(samples));
-    % 4) Outlier removal
-    [idx,p,tracks,reprojectionErrors]=removeOutliers(... 
-    p,reprojectionErrors,reprojection_error_threshold,tracks);
-    % 5) Get color information
-    color=getColor(tracks,color_images,size(p,1)); 
-    % 6) Merge results
-    deltaxy=(abspos(samples(1),1:2)-abspos(1,1:2));
-    traj(:,1:2)=traj(:,1:2) - deltaxy;
-    p(:,1:2)=p(:,1:2)-deltaxy;
-    
-    for j=1:size(tracks,2)
-        tracks(j).ViewIds=tracks(j).ViewIds + (i-1)*batch_size;
-    end
-    
-    Points=[Points;p];
+samples=1:batch_size;
+parfor i=1:batch_num
+   [p,tracks,reprojectionErrors,color,traj] = batch_construction_loop(... 
+    imds,i,batch_size,abspos,heading,pitch,... 
+    intrinsics,detector,constructor,MAX_features,scale,reprojection_error_threshold)
+
+    sizes(i)=size(p,1);
+    P=[P;p];
     TRACKS=[TRACKS,tracks];
     ERRORS=[ERRORS;reprojectionErrors];
     COLOR=[COLOR;color];
     TRAJ=[TRAJ;traj];
-    toc;
+    
     fprintf("Loop %d done\n",i);
 end
+[scene,P_stich]=batch_stich(P,COLOR,sizes);
+
+toc;
+%% Final BA
+
+% camPoses=vSet_total.poses;
+% [P, camPoses, ERRORS] = bundleAdjustment(...
+%    P, TRACKS, camPoses, intrinsics, 'FixedViewId', 1);
+
+%% perform IDW
+tic;
+[X,Y,Z,PIDW]=inverseDistanceWeighting(P_stich(1:10:end,:));
+toc;
+%% perform ICP
+[PICP,tform,rmse] = ICP(origin,abspos,X,Y,Z,P_stich,true);
