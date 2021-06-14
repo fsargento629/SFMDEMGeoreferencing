@@ -3,6 +3,7 @@ Datasets/OLD_datasets
 *.avi
 simple_ocr/
 Draft scripts/
-SFM_results/old
+SFM_results/
 DEMs/portugal_DEM.mat
 resources/
+PointClouds/
