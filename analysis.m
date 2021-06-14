@@ -1,7 +1,7 @@
 %% load 
 clear;
 load('SFM_results/SFM_result_T4_dense.mat');
-%load('batch_SFM_result_5.mat');p=P_stich;tracks=TRACKS;
+%load('SFM_results/batch_SFM_result_5.mat');p=P_stich;tracks=TRACKS;
 close all;
 clc;
 dataset_name='T4';
