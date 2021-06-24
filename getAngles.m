@@ -16,7 +16,7 @@ rel_ang=[yaw p roll];
 
 
 % Sum the true angle values of the first view
-world_ang=rel_ang+[heading(1), pitch(1), 0];
+world_ang=rel_ang+[heading(1), -pitch(1), 0];
 
 end
 

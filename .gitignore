@@ -7,3 +7,6 @@ SFM_results/
 DEMs/portugal_DEM.mat
 resources/
 PointClouds/
+large_results/
+Videos/
+SFM_results/

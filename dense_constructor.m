@@ -1,4 +1,5 @@
-function [xyzPoints, camPoses, reprojectionErrors,tracks] = dense_constructor(intrinsics,images,constructor,vSet)
+function [xyzPoints, camPoses, reprojectionErrors,tracks] = dense_constructor(... 
+    intrinsics,images,constructor,vSet,reprojection_error_threshold)
 %dense_constructor extract points and build a large poinc cloud using
 % regular features
 
@@ -55,7 +56,7 @@ camPoses = poses(vSet);
 % Triangulate initial locations for the 3-D world points.
 [xyzPoints,reprojectionErrors] = triangulateMultiview(tracks, camPoses,...
     intrinsics);
-mask=reprojectionErrors<15;
+mask=reprojectionErrors<reprojection_error_threshold;
 xyzPoints=xyzPoints(mask,:);
 tracks=tracks(mask);
 

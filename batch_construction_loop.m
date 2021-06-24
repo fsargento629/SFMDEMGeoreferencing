@@ -26,7 +26,8 @@ fprintf("Dense reconstruction for loop %d done\n",i);
 [idx,p,tracks,reprojectionErrors]=removeOutliers(...
     p,reprojectionErrors,reprojection_error_threshold,tracks);
 % 5) Get color information
-color=getColor(tracks,color_images,size(p,1));
+color=[0,0];
+%color=getColor(tracks,color_images,size(p,1));
 % 6) Merge results
 deltaxy=(abspos(samples(1),1:2)-abspos(1,1:2));
 traj(:,1:2)=traj(:,1:2) - deltaxy;

@@ -1,7 +1,7 @@
 function [scene,P_stich] = batch_stich(P,COLOR,sizes)
 
 
-scene=pointCloud(P(1:sizes(1),:),'Color',COLOR(1:sizes(1),:));
+scene=pointCloud(P(1:sizes(1),:));%,'Color',COLOR(1:sizes(1),:));
 
 % cycle all the batches:
 % 1) register each of them to the scene
@@ -12,9 +12,9 @@ P_stich(1:sizes(1),:)=P(1:sizes(1),:);
 for i=2:size(sizes,1)
     %% select current pcl
     idx=sum(sizes(1:i-1))+1:sum(sizes(1:i-1))+sizes(i);
-    CURR=pointCloud(P(idx,:),'Color',COLOR(idx,:));
+    CURR=pointCloud(P(idx,:));%,'Color',COLOR(idx,:));
     %% downsample
-    gridSize = 5;
+    gridSize = 10;
     fixed = pcdownsample(scene, 'gridAverage', gridSize);
     moving = pcdownsample(CURR, 'gridAverage', gridSize);
     

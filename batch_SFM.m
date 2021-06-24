@@ -1,11 +1,11 @@
 %% Algorithm definitions
 clear;clc;
 reprojection_error_threshold=5;
-dataset="archeira/T4";
+dataset="archeira/T5";
 detector="SURF";
 MAX_features=200;
 constructor="Eigen001";
-batch_size=15;
+batch_size=10;
 %% load image directory
 close all;
 imageDir=strcat('Datasets/Blender datasets/',dataset);
@@ -49,7 +49,7 @@ sizes=zeros(batch_num,1);
 % 6) Merge new results to the old
 samples=1:batch_size;
 parfor i=1:batch_num
-   [p,tracks,reprojectionErrors,color,traj] = batch_construction_loop(... 
+   [p,tracks,reprojectionErrors,~,traj] = batch_construction_loop(... 
     imds,i,batch_size,abspos,heading,pitch,... 
     intrinsics,detector,constructor,MAX_features,scale,reprojection_error_threshold)
 
@@ -57,11 +57,12 @@ parfor i=1:batch_num
     P=[P;p];
     TRACKS=[TRACKS,tracks];
     ERRORS=[ERRORS;reprojectionErrors];
-    COLOR=[COLOR;color];
+    %COLOR=[COLOR;color];
     TRAJ=[TRAJ;traj];
     
     fprintf("Loop %d done\n",i);
 end
+%COLOR=zeros(size(P,1),2);
 [scene,P_stich]=batch_stich(P,COLOR,sizes);
 
 toc;

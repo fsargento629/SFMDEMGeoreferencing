@@ -8,9 +8,17 @@ dataset_name='T4';
 %% DO ICP and show pre and post results
 clc;
 gridstep=30;
-[tform,picp,rmse,dem]=quickICP(p,abspos,origin,gridstep);
-geoEvaluate(abspos,p,tracks,dataset_name,0);
-geoEvaluate(abspos,p,tracks,dataset_name,tform);
+pitch_noise=0;
+heading_noise=0;
+abspos_noisy=abspos+[10,10,0];
+R=axang2rotm([1 0 0 deg2rad(pitch_noise)]);
+R=axang2rotm([0 0 1 deg2rad(heading_noise)])*R;
+
+p_noisy=p*R;
+p_noisy=p_noisy+[0,0,0];
+[tform,picp,rmse,dem]=quickICP(p_noisy,abspos_noisy,origin,gridstep);
+geoEvaluate(abspos_noisy,p_noisy,tracks,dataset_name,0);
+geoEvaluate(abspos_noisy,p_noisy,tracks,dataset_name,tform);
 
 %% show DEM
 figure; pcshow(dem); title("DEM");

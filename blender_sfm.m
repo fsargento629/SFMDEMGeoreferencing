@@ -1,22 +1,32 @@
 %% Algorithm definitions
-clear;clc;
-reprojection_error_threshold=5;
-dataset="archeira/T4";
+clear;clc;close all;
+reprojection_error_threshold=1;
+dataset_name='T4';
+dataset=strcat("archeira/",dataset_name);
 detector="SURF";
 constructor="KAZE";
+t0=0; dt=1; tf=29;
+evaluate=false;
 %% load images
-close all;
+samples=t0+1:dt:tf+1;
+
 imageDir=strcat('Datasets/Blender datasets/',dataset);
+load(strcat("Datasets/Blender datasets/",dataset,"/extrinsics"));
 imds = imageDatastore(imageDir);
 
-% select images
-images = cell(1, numel(imds.Files));
-color_images=cell(1, numel(imds.Files));
-for i=1:numel(imds.Files)
-    I = readimage(imds, i);
+% select images (only the selected samples
+images = cell(1, numel(samples));
+color_images=cell(1, numel(samples));
+for i=1:numel(samples)
+    I = readimage(imds, samples(i));
     images{i} = rgb2gray(I);
     color_images{i}=I;
 end
+ % select only the desired extrinsics
+ pitch=pitch(samples);
+ heading=heading(samples);
+ abspos=abspos(samples,:);
+ 
 
 %% define intrinsics
 load("intrinsics/blender_intrinsics");
@@ -36,11 +46,11 @@ toc;
 %% dense reconstruction
 tic;
 [xyzPoints, camPoses, reprojectionErrors,tracks]= ... 
-    dense_constructor(intrinsics,images,constructor,vSet);
+    dense_constructor(intrinsics,images,constructor,vSet,reprojection_error_threshold);
 toc;
-
+beep;
 %% get extrinsics and transform pcl using it
-load(strcat("Datasets/Blender datasets/",dataset,"/extrinsics"));
+
 
 % Point cloud transform
 tic;
@@ -56,7 +66,18 @@ toc;
 %% get color information for each point
 color=getColor(tracks,color_images,size(p,1)); 
 
-%% perform IDW
-[X,Y,Z,pidw]=inverseDistanceWeighting(p(1:10:end,:));
-%% perform ICP
-[picp,tform,rmse] = ICP(origin,abspos,X,Y,Z,p,true);
+
+%% ICP and evaluate
+gridstep=30;
+[tform,picp,rmse,dem]=quickICP(p,abspos,origin,gridstep);
+if evaluate==true
+    geoEvaluate(abspos,p,tracks,dataset_name,0);
+    geoEvaluate(abspos,p,tracks,dataset_name,tform);
+end
+
+
+
+% %% perform IDW
+% [X,Y,Z,pidw]=inverseDistanceWeighting(p(1:10:end,:));
+% %% perform ICP
+% [picp,tform,rmse] = ICP(origin,abspos,X,Y,Z,p,true);

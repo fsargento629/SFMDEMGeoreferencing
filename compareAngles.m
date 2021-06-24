@@ -1,7 +1,7 @@
 function [new_ang] = compareAngles(ang,heading,pitch)
 %compareAngles Draw the estimated and real angles
 
-new_ang= ang+ [heading(1)  ,pitch(1),0];
+new_ang= ang;%+ [heading(1)  ,pitch(1),0];
 
 % show heading
 figure; plot(heading,'ro--'); hold on;
