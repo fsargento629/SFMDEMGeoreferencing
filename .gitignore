@@ -1,12 +1,19 @@
 *.tif
-Datasets/OLD_datasets
+*.mat
 *.avi
 simple_ocr/
 Draft scripts/
 SFM_results/
-DEMs/portugal_DEM.mat
 resources/
 PointClouds/
 large_results/
 Videos/
 SFM_results/
+*.ply
+DEMs/
+Consistency_results/
+Datasets/
+ICP_optimization/
+REMs/
+
+

@@ -1,18 +1,19 @@
-function [inliers,p,tracks,reprojectionErrors] = removeOutliers(pcl,error,reprojection_error_threshold,t)
+function [inliers,p,tracks,reprojectionErrors] =...
+    removeOutliers_real(pcl,error,reprojection_error_threshold,t,max_d)
 %removeOutliers(xyzPoints) Remove outliers from point cloud
 %   Detailed explanation goes here
 p=pcl.Location;
 %inliers=ones(size(p,1),1);
 % %remove points that are too high
-inliers=p(:,3)<800;
+inliers=p(:,3)<1000;
 % 
 % % remove points that are too low 
-idx=p(:,3)>-1000;
+idx=p(:,3)>-2000;
 inliers=inliers.*idx;
 
-% remove points that are too distant (>10000 m)
+% remove points that are too distant (>max_d m)
 D_2=sqrt(p(:,1).^2 + p(:,2).^2);
-idx=D_2(:)<10000;
+idx=D_2(:)<max_d;
 inliers=inliers.*idx;
 
 % remove points if their error is above the threshold
@@ -43,7 +44,7 @@ reprojectionErrors=error(inliers);
 % reprojectionErrors(idx)=[];
 
 % finally, use pcdenoise to filter
-[p,inliers]=pcdenoise(pointCloud(p),'NumNeighbors',5);
+[p,inliers]=pcdenoise(pointCloud(p),'NumNeighbors',4);
 p=p.Location;
 tracks=tracks(inliers);
 reprojectionErrors=reprojectionErrors(inliers);

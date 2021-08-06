@@ -73,26 +73,32 @@ for i = 2:numel(images)
     % Store the point matches between the previous and the current views.
     vSet = addConnection(vSet, i-1, i, relPose, 'Matches', indexPairs(inlierIdx,:));
     
-    % Find point tracks across all views.
+   
+    
+    prevFeatures = currFeatures;
+    prevPoints   = currPoints;
+end
+ % Find point tracks across all views.
     tracks = findTracks(vSet);
     
     % Get the table containing camera poses for all views.
     camPoses = poses(vSet);
     
-    % Triangulate initial locations for the 3-D world points.
-    xyzPoints = triangulateMultiview(tracks, camPoses, intrinsics);
+
+     % Triangulate initial locations for the 3-D world points.
+    [xyzPoints,reprojectionErrors] = triangulateMultiview(tracks, camPoses, intrinsics);
+    
+    % remove high error points  
+    mask=reprojectionErrors<5;
+    tracks=tracks(mask);
+    xyzPoints=xyzPoints(mask,:);
     
     % Refine the 3-D world points and camera poses.
     [xyzPoints, camPoses, reprojectionErrors] = bundleAdjustment(xyzPoints, ...
         tracks, camPoses, intrinsics, 'FixedViewId', 1);
-    
+ 
     % Store the refined camera poses.
     vSet = updateView(vSet, camPoses);
-    
-    prevFeatures = currFeatures;
-    prevPoints   = currPoints;
-end
-
 % % Show result
 % cams=zeros(size(camPoses,1),3);
 % for i=1:size(camPoses,1)

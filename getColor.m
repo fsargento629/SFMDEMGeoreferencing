@@ -13,6 +13,12 @@ for i=1:size(color,1)
     if px(2)>size(I,1)
         px(2)=size(I,1);
     end
+    if px(1)<=0
+        px(1)=1;
+    end
+    if px(2)<=0
+        px(2)=1;
+    end
     color(i,:)=I(px(2),px(1),:);
    
 end
